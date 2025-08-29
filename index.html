@@ -694,7 +694,7 @@
           <option value="olt">OLT</option>
           <option value="c12">C-12</option>
           <option value="emp">EMPALME</option>
-
+          <option value="pzo">POZO</option>
         </select>
 
         <button id="add-gps-btn" title="Agregar activo con GPS">
@@ -914,7 +914,7 @@
             <option value="olt">OLT</option>
             <option value="c12">C-12</option>
             <option value="emp">EMPALME</option>
-
+            <option value="pzo">POZO</option>
           </select>
         </div>
         <div class="gps-row">
@@ -975,21 +975,21 @@ const ICONS = {
       }),
 
   nap: L.icon({
-    iconUrl: "https://github.com/rtrejo81-byte/FTTH_SV_RT/blob/main/nap.png",
+    iconUrl: "nap.png",
     shadowUrl: "icons/shadow.png",
     iconSize: [32, 32],
     iconAnchor: [16, 32],
     popupAnchor: [0, -28],
   }),
   fat: L.icon({
-    iconUrl: "icons/fat.png",
+    iconUrl: "fat.png",
     shadowUrl: "icons/shadow.png",
     iconSize: [32, 32],
     iconAnchor: [16, 32],
     popupAnchor: [0, -28],
   }),
   olt: L.icon({
-    iconUrl: "icons/olt.png",
+    iconUrl: "olt.png",
     shadowUrl: "icons/shadow.png",
     iconSize: [32, 32],
     iconAnchor: [16, 32],
@@ -1003,13 +1003,19 @@ const ICONS = {
     popupAnchor: [0, -28],
   }),
 emp: L.icon({
-    iconUrl: "icons/empalme.png",
+    iconUrl: "empalme.png",
     shadowUrl: "icons/shadow.png",
     iconSize: [32, 32],
     iconAnchor: [16, 32],
     popupAnchor: [0, -28],
   }),
-
+pzo: L.icon({
+    iconUrl: "pozo.png",
+    shadowUrl: "icons/shadow.png",
+    iconSize: [32, 32],
+    iconAnchor: [16, 32],
+    popupAnchor: [0, -28],
+  }),
   default: L.icon({
     iconUrl: "icons/default.png",
     shadowUrl: "icons/shadow.png",
@@ -2060,6 +2066,7 @@ emp: L.icon({
   </script>
 </body>
 </html>
+
 
 
 
