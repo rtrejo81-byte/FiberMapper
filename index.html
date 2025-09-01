@@ -520,7 +520,8 @@
 
     /* Modal de exportación */
     .export-modal,
-    .gps-modal {
+    .gps-modal,
+    .nap-modal {
       position: fixed;
       inset: 0;
       width: 100%;
@@ -532,7 +533,8 @@
       z-index: 2000;
     }
     .export-content,
-    .gps-content {
+    .gps-content,
+    .nap-content {
       background-color: var(--surface);
       padding: 16px;
       border-radius: 12px;
@@ -593,6 +595,36 @@
       border-radius: 8px;
       padding: 10px;
       cursor: pointer;
+    }
+
+    /* Modal NAP */
+    .nap-form {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+    .nap-row {
+      display: grid;
+      grid-template-columns: 1fr 2fr;
+      gap: 8px;
+      align-items: center;
+    }
+    .nap-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 4px;
+    }
+    .nap-photo-preview {
+      max-width: 100%;
+      max-height: 200px;
+      border-radius: 8px;
+      margin-top: 8px;
+      display: none;
+    }
+    .nap-photo-container {
+      grid-column: 1 / span 2;
+      text-align: center;
     }
 
     .hint {
@@ -750,8 +782,8 @@
           <option value="emp">EMPALME</option>
           <option value="pzo">POZO</option>
           <option value="ont">ONT</option>
-           <option value="odf">ODF</option>
-           <option value="box">HUBBOX</option>
+          <option value="odf">ODF</option>
+          <option value="box">HUBBOX</option>
         </select>
 
         <button id="add-gps-btn" title="Agregar activo con GPS">
@@ -904,6 +936,9 @@
                 <option value="olt">OLT</option>
                 <option value="c12">C-12</option>
                 <option value="emp">EMPALME</option>
+                <option value="ont">ONT</option>
+                <option value="odf">ODF</option>
+                <option value="box">HUBBOX</option>
 
               </select>
 
@@ -989,9 +1024,9 @@
             <option value="c12">C-12</option>
             <option value="emp">EMPALME</option>
             <option value="pzo">POZO</option>
-             <option value="ont">ONT</option>
-           <option value="odf">ODF</option>
-           <option value="box">HUBBOX</option>
+            <option value="ont">ONT</option>
+          <option value="odf">ODF</option>
+          <option value="box">HUBBOX</option>
           </select>
         </div>
         <div class="gps-row">
@@ -1009,6 +1044,34 @@
         <div class="gps-actions">
           <button class="btn-outline" id="gps-cancel">Cancelar</button>
           <button class="btn-primary" id="gps-confirm">Obtener ubicación</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal para editar NAP -->
+  <div class="nap-modal" id="nap-modal">
+    <div class="nap-content">
+      <h2 style="margin-bottom:8px;">Editar NAP</h2>
+      <div class="nap-form">
+        <div class="nap-row">
+          <label for="nap-name">Nombre del NAP</label>
+          <input type="text" id="nap-name" placeholder="Ej: NAP_001">
+        </div>
+        <div class="nap-row">
+          <label for="nap-description">Descripción</label>
+          <input type="text" id="nap-description" placeholder="Descripción opcional">
+        </div>
+        <div class="nap-photo-container">
+          <label for="nap-photo" class="file-upload-label">
+            <i class="fas fa-camera"></i> Seleccionar foto
+            <input type="file" id="nap-photo" accept="image/*" capture="environment">
+          </label>
+          <img id="nap-photo-preview" class="nap-photo-preview" alt="Vista previa">
+        </div>
+        <div class="nap-actions">
+          <button class="btn-outline" id="nap-cancel">Cancelar</button>
+          <button class="btn-primary" id="nap-confirm">Guardar NAP</button>
         </div>
       </div>
     </div>
@@ -1038,6 +1101,10 @@
 
     let selectedExportFormat = null;
     
+    // Variables para el NAP
+    let currentNapData = null;
+    let napPhotoData = null;
+    
     // Nuevas variables para control de ubicación
     let currentLocationMarker = null;
     let currentAccuracyCircle = null;
@@ -1055,78 +1122,77 @@
         shadowSize: [41, 41],
       }),
 
-      nap: L.icon({
-        iconUrl: "nap.png",
-        shadowUrl: "icons/shadow.png",
-        iconSize: [32, 32],
-        iconAnchor: [16, 32],
-        popupAnchor: [0, -28],
-      }),
-      fat: L.icon({
-        iconUrl: "fat.png",
-        shadowUrl: "icons/shadow.png",
-        iconSize: [32, 32],
-        iconAnchor: [16, 32],
-        popupAnchor: [0, -28],
-      }),
-      olt: L.icon({
-        iconUrl: "olt.png",
-        shadowUrl: "icons/shadow.png",
-        iconSize: [32, 32],
-        iconAnchor: [16, 32],
-        popupAnchor: [0, -28],
-      }),
-      c12: L.icon({
-        iconUrl: "c12.png",
-        shadowUrl: "icons/shadow.png",
-        iconSize: [32, 32],
-        iconAnchor: [16, 32],
-        popupAnchor: [0, -28],
-      }),
-      emp: L.icon({
-        iconUrl: "empalme.png",
-        shadowUrl: "icons/shadow.png",
-        iconSize: [32, 32],
-        iconAnchor: [16, 32],
-        popupAnchor: [0, -28],
-      }),
-      pzo: L.icon({
-        iconUrl: "pozo.png",
-        shadowUrl: "icons/shadow.png",
-        iconSize: [32, 32],
-        iconAnchor: [16, 32],
-        popupAnchor: [0, -28],
-      }),
-      default: L.icon({
-        iconUrl: "icons/default.png",
-        shadowUrl: "icons/shadow.png",
-        iconSize: [32, 32],
-        iconAnchor: [16, 32],
-        popupAnchor: [0, -28],
-      }),
-    ont: L.icon({
-        iconUrl: "ont.png",
-        shadowUrl: "icons/shadow.png",
-        iconSize: [32, 32],
-        iconAnchor: [16, 32],
-        popupAnchor: [0, -28],
-      }),
-       odf: L.icon({
-        iconUrl: "odf.png",
-        shadowUrl: "icons/shadow.png",
-        iconSize: [32, 32],
-        iconAnchor: [16, 32],
-        popupAnchor: [0, -28],
-      }),
-       box: L.icon({
-        iconUrl: "box.png",
-        shadowUrl: "icons/shadow.png",
-        iconSize: [32, 32],
-        iconAnchor: [16, 32],
-        popupAnchor: [0, -28],
-      }),
-    };
-
+       nap: L.icon({
+    iconUrl: "nap.png",
+    shadowUrl: "icons/shadow.png",
+    iconSize: [32, 32],
+    iconAnchor: [16, 32],
+    popupAnchor: [0, -28],
+  }),
+  fat: L.icon({
+    iconUrl: "fat.png",
+    shadowUrl: "icons/shadow.png",
+    iconSize: [32, 32],
+    iconAnchor: [16, 32],
+    popupAnchor: [0, -28],
+  }),
+  olt: L.icon({
+    iconUrl: "olt.png",
+    shadowUrl: "icons/shadow.png",
+    iconSize: [32, 32],
+    iconAnchor: [16, 32],
+    popupAnchor: [0, -28],
+  }),
+  c12: L.icon({
+    iconUrl: "c12.png",
+    shadowUrl: "icons/shadow.png",
+    iconSize: [32, 32],
+    iconAnchor: [16, 32],
+    popupAnchor: [0, -28],
+  }),
+emp: L.icon({
+    iconUrl: "empalme.png",
+    shadowUrl: "icons/shadow.png",
+    iconSize: [32, 32],
+    iconAnchor: [16, 32],
+    popupAnchor: [0, -28],
+  }),
+pzo: L.icon({
+    iconUrl: "pozo.png",
+    shadowUrl: "icons/shadow.png",
+    iconSize: [32, 32],
+    iconAnchor: [16, 32],
+    popupAnchor: [0, -28],
+  }),
+  default: L.icon({
+    iconUrl: "icons/default.png",
+    shadowUrl: "icons/shadow.png",
+    iconSize: [32, 32],
+    iconAnchor: [16, 32],
+    popupAnchor: [0, -28],
+  }),
+      ont: L.icon({
+    iconUrl: "ont.png",
+    shadowUrl: "icons/shadow.png",
+    iconSize: [32, 32],
+    iconAnchor: [16, 32],
+    popupAnchor: [0, -28],
+  }),
+    odf: L.icon({
+    iconUrl: "odf.png",
+    shadowUrl: "icons/shadow.png",
+    iconSize: [32, 32],
+    iconAnchor: [16, 32],
+    popupAnchor: [0, -28],
+    }),
+    box: L.icon({
+    iconUrl: "box.png",
+    shadowUrl: "icons/shadow.png",
+    iconSize: [32, 32],
+    iconAnchor: [16, 32],
+    popupAnchor: [0, -28],
+   }),
+  };
     // =========================
     // Inicialización del mapa
     // =========================
@@ -1171,6 +1237,9 @@
             startCableDrawing();
           }
           addCablePoint(e.latlng);
+        } else if (type === "nap") {
+          // Para NAP, abrimos el modal de edición
+          openNapModal(e.latlng);
         } else {
           addAsset(e.latlng.lat, e.latlng.lng);
         }
@@ -1212,11 +1281,35 @@
       URL.revokeObjectURL(url);
     }
 
+    function dataURLtoBlob(dataurl) {
+      const arr = dataurl.split(',');
+      const mime = arr[0].match(/:(.*?);/)[1];
+      const bstr = atob(arr[1]);
+      let n = bstr.length;
+      const u8arr = new Uint8Array(n);
+      while (n--) {
+        u8arr[n] = bstr.charCodeAt(n);
+      }
+      return new Blob([u8arr], { type: mime });
+    }
+
     // =========================
     // Persistencia
     // =========================
     function saveData() {
-      localStorage.setItem("ftth_sv_rt_assets", JSON.stringify(assets));
+      // Convertimos las fotos a formato almacenable
+      const assetsToSave = assets.map(asset => {
+        if (asset.photo && asset.photo.startsWith('data:')) {
+          // No guardamos datos de imagen grandes en localStorage
+          const copy = {...asset};
+          delete copy.photo;
+          copy.hasPhoto = true;
+          return copy;
+        }
+        return asset;
+      });
+      
+      localStorage.setItem("ftth_sv_rt_assets", JSON.stringify(assetsToSave));
     }
 
     function loadSavedData() {
@@ -1255,31 +1348,27 @@
     // =========================
     // Activos (puntos)
     // =========================
-    function addAsset(lat, lng) {
-      const type = document.getElementById("asset-type-selector").value;
-      const typeLabels = {
-        pole: "POSTE",
-        nap: "NAP",
-        cab: "Cable FO",
-        fat: "FAT",
-        olt: "OLT",
-        c12: "C-12",
-        emp: "EMPALME",
-        ont: "ONT",
-        odf: "ODF",
-        box: "HUBBOX"
-
-      };
-
+    function addAsset(lat, lng, label, type, photo, description) {
+      const assetType = type || document.getElementById("asset-type-selector").value;
+      
       const id = generateId();
+      const assetLabel = label || `${assetType.toUpperCase()}_${id.substring(0, 4)}`;
+
       const asset = {
         id,
-        type,
-        label: `${type.toUpperCase()}_${id.substring(0, 4)}`,
+        type: assetType,
+        label: assetLabel,
         lat: Number(lat.toFixed(6)),
         lng: Number(lng.toFixed(6)),
-        props: {},
+        props: {
+          description: description || ""
+        },
       };
+
+      // Agregar foto si está disponible
+      if (photo) {
+        asset.photo = photo;
+      }
 
       assets.push(asset);
       addMarker(asset);
@@ -1288,14 +1377,14 @@
       updateStats();
       saveData();
       selectAsset(id);
+      
+      return asset;
     }
 
     function addMarker(asset) {
       if (markers[asset.id]) map.removeLayer(markers[asset.id]);
 
-      const icon =
-        ICONS[asset.type] ||
-        ICONS.default;
+      const icon = ICONS[asset.type] || ICONS.default;
 
       const marker = L.marker([asset.lat, asset.lng], {
         draggable: true,
@@ -1314,16 +1403,34 @@
         selectAsset(asset.id);
       });
 
-      marker.bindPopup(`
+      // Popup mejorado para NAPs con foto
+      let popupContent = `
         <div class="popup-content">
           <div class="popup-title">${asset.label}</div>
           <div class="popup-coords">${asset.lat}, ${asset.lng}</div>
+      `;
+      
+      if (asset.props && asset.props.description) {
+        popupContent += `<div>${asset.props.description}</div>`;
+      }
+      
+      if (asset.photo) {
+        popupContent += `
+          <div style="margin-top: 8px;">
+            <img src="${asset.photo}" style="max-width: 150px; max-height: 100px; border-radius: 4px;">
+          </div>
+        `;
+      }
+      
+      popupContent += `
           <div class="popup-actions">
             <button class="popup-btn" onclick="selectAsset('${asset.id}')">Editar</button>
             <button class="popup-btn" onclick="deleteAsset('${asset.id}')">Eliminar</button>
           </div>
         </div>
-      `);
+      `;
+
+      marker.bindPopup(popupContent, { maxWidth: 300 });
 
       markers[asset.id] = marker;
     }
@@ -1338,11 +1445,10 @@
         document.getElementById("editor-type").value = asset.type;
         document.getElementById("editor-lat").value = asset.lat ?? "";
         document.getElementById("editor-lng").value = asset.lng ?? "";
-        document.getElementById("editor-props").value = JSON.stringify(
-          asset.props || {},
-          null,
-          2
-        );
+        
+        // Actualizar propiedades incluyendo descripción
+        const props = asset.props || {};
+        document.getElementById("editor-props").value = JSON.stringify(props, null, 2);
 
         document.getElementById("no-selection-message").style.display = "none";
         document.getElementById("editor-panel").style.display = "block";
@@ -1435,13 +1541,21 @@
           const el = document.createElement("div");
           el.className = "asset-item";
           el.setAttribute("data-id", asset.id);
-          el.innerHTML = `
+          
+          let assetInfo = `
             <div class="asset-header">
               <div class="asset-name">${asset.label}</div>
               <div class="asset-type">${asset.type.toUpperCase()}</div>
             </div>
             <div class="asset-coords">${asset.lat ?? "—"}, ${asset.lng ?? "—"}</div>
           `;
+          
+          // Mostrar icono de cámara si tiene foto
+          if (asset.photo || asset.hasPhoto) {
+            assetInfo += `<div style="margin-top:4px;"><i class="fas fa-camera" style="color:#3b82f6;"></i> Con foto</div>`;
+          }
+          
+          el.innerHTML = assetInfo;
           el.addEventListener("click", () => selectAsset(asset.id));
           list.appendChild(el);
         });
@@ -1508,6 +1622,74 @@
 
       distanceLabels.push(marker);
       if (!showLabels) map.removeLayer(marker);
+    }
+
+    // =========================
+    // Funciones para NAP (Nuevo Punto de Acceso)
+    // =========================
+    function openNapModal(latlng) {
+      currentNapData = {
+        lat: latlng.lat,
+        lng: latlng.lng
+      };
+      napPhotoData = null;
+      
+      // Limpiar formulario
+      document.getElementById("nap-name").value = "";
+      document.getElementById("nap-description").value = "";
+      document.getElementById("nap-photo-preview").style.display = "none";
+      document.getElementById("nap-photo-preview").src = "";
+      document.getElementById("nap-photo").value = "";
+      
+      // Mostrar modal
+      document.getElementById("nap-modal").style.display = "flex";
+    }
+
+    function closeNapModal() {
+      document.getElementById("nap-modal").style.display = "none";
+      currentNapData = null;
+      napPhotoData = null;
+    }
+
+    function saveNap() {
+      const name = document.getElementById("nap-name").value.trim();
+      const description = document.getElementById("nap-description").value.trim();
+      
+      if (!name) {
+        alert("Por favor ingresa un nombre para el NAP");
+        return;
+      }
+      
+      // Crear el asset NAP
+      addAsset(
+        currentNapData.lat, 
+        currentNapData.lng, 
+        name, 
+        "nap",
+        napPhotoData,
+        description
+      );
+      
+      closeNapModal();
+    }
+
+    function handleNapPhotoUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      
+      if (!file.type.match('image.*')) {
+        alert("Por favor selecciona solo archivos de imagen");
+        return;
+      }
+      
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        napPhotoData = e.target.result;
+        const preview = document.getElementById("nap-photo-preview");
+        preview.src = napPhotoData;
+        preview.style.display = "block";
+      };
+      reader.readAsDataURL(file);
     }
 
     // =========================
@@ -1943,7 +2125,7 @@
     }
 
     function exportToCSV() {
-      let csvContent = "ID,Tipo,Etiqueta,Latitud,Longitud,Distancia,Propiedades\n";
+      let csvContent = "ID,Tipo,Etiqueta,Latitud,Longitud,Distancia,Descripción,Foto\n";
 
       assets.forEach((asset) => {
         const row = [
@@ -1953,7 +2135,8 @@
           asset.lat || "",
           asset.lng || "",
           asset.distance || "",
-          `"${JSON.stringify(asset.props || {}).replace(/"/g, '""')}"`
+          `"${(asset.props && asset.props.description) || ""}"`,
+          asset.photo ? "Sí" : "No"
         ].join(",");
         csvContent += row + "\n";
       });
@@ -1967,37 +2150,45 @@
 <kml xmlns="http://www.opengis.net/kml/2.2">
   <Document>
     <name>FTTH Map Export</name>
-    <description>Exportado desde FTTH-SV-RT</description>`;
-
-      // Mapeo de iconos según tipo de activo
-      const iconMap = {
-        pole: "http://maps.google.com/mapfiles/kml/paddle/P.png",
-        nap: "http://maps.google.com/mapfiles/kml/paddle/N.png",
-        fat: "http://maps.google.com/mapfiles/kml/paddle/F.png",
-        c12: "http://maps.google.com/mapfiles/kml/paddle/C.png",
-        odf: "http://maps.google.com/mapfiles/kml/paddle/O.png",
-        box: "http://maps.google.com/mapfiles/kml/paddle/B.png",
-        emp: "http://maps.google.com/mapfiles/kml/paddle/E.png",
-        pzo: "http://maps.google.com/mapfiles/kml/paddle/Z.png",
-      };
+    <description>Exportado desde FTTH-SV-RT</description>
+    // Mapeo de iconos según tipo de activo
+  const iconMap = {
+    pole: "http://maps.google.com/mapfiles/kml/paddle/P.png",
+    nap: "http://maps.google.com/mapfiles/kml/paddle/N.png",
+    fat: "http://maps.google.com/mapfiles/kml/paddle/F.png",
+    c12: "http://maps.google.com/mapfiles/kml/paddle/C.png"
+     ont: "http://maps.google.com/mapfiles/kml/paddle/C.png"
+      odf: "http://maps.google.com/mapfiles/kml/paddle/O.png"
+       box: "http://maps.google.com/mapfiles/kml/paddle/B.png"
+};
+    <Style id="photoStyle">
+      <IconStyle>
+        <Icon>
+          <href>http://maps.google.com/mapfiles/kml/pal4/icon57.png</href>
+        </Icon>
+      </IconStyle>
+    </Style>`;
 
       // Añadir marcadores
       assets
         .filter(asset => asset.type !== "cab")
         .forEach(asset => {
-          const iconUrl = iconMap[asset.type] || "http://maps.google.com/mapfiles/kml/paddle/wht-blank.png";
-
+          const hasPhoto = asset.photo ? ' styleUrl="#photoStyle"' : '';
+          
           kmlContent += `
-    <Placemark>
+    <Placemark${hasPhoto}>
       <name>${escapeXML(asset.label)}</name>
-      <description>Tipo: ${asset.type}</description>
-      <Style>
-        <IconStyle>
-          <Icon>
-            <href>${iconUrl}</href>
-          </Icon>
-        </IconStyle>
-      </Style>
+      <description>
+        <![CDATA[
+          <div style="font-family: Arial, sans-serif; max-width: 300px;">
+            <h3 style="margin: 0 0 10px 0; color: #1e40af;">${escapeXML(asset.label)}</h3>
+            <p><strong>Tipo:</strong> ${asset.type}</p>
+            <p><strong>Coordenadas:</strong> ${asset.lat}, ${asset.lng}</p>
+            ${asset.props && asset.props.description ? `<p><strong>Descripción:</strong> ${escapeXML(asset.props.description)}</p>` : ''}
+            ${asset.photo ? `<img src="${asset.photo}" style="max-width: 100%; border-radius: 5px; margin-top: 10px;">` : ''}
+          </div>
+        ]]>
+      </description>
       <Point>
         <coordinates>${asset.lng},${asset.lat},0</coordinates>
       </Point>
@@ -2181,7 +2372,14 @@
                          `${type.toUpperCase()}_GPS_${new Date().getTime().toString().slice(-4)}`;
             
             document.getElementById("asset-type-selector").value = type;
-            addAsset(lat, lng);
+            
+            // Si es NAP, abrir modal de edición
+            if (type === "nap") {
+              openNapModal({ lat, lng });
+            } else {
+              addAsset(lat, lng);
+            }
+            
             closeGpsModal();
           }
         },
@@ -2318,7 +2516,14 @@
           return;
         }
         
-        addAsset(lat, lng);
+        const type = document.getElementById("asset-type-selector").value;
+        
+        // Si es NAP, abrir modal de edición
+        if (type === "nap") {
+          openNapModal({ lat, lng });
+        } else {
+          addAsset(lat, lng);
+        }
       });
 
       // Controles de cable
@@ -2367,6 +2572,11 @@
         const highAccuracy = document.getElementById("gps-accuracy").value === "true";
         getCurrentLocation(highAccuracy);
       });
+
+      // NAP Modal
+      document.getElementById("nap-photo").addEventListener("change", handleNapPhotoUpload);
+      document.getElementById("nap-cancel").addEventListener("click", closeNapModal);
+      document.getElementById("nap-confirm").addEventListener("click", saveNap);
 
       // Toggle sidebar
       document.getElementById("toggle-sidebar").addEventListener("click", function() {
