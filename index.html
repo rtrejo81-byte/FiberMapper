@@ -612,6 +612,60 @@
       color: var(--text-secondary);
     }
 
+    /* Nuevos estilos para control de cables */
+    .cable-controls {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .cable-control-btn {
+      padding: 8px;
+      text-align: center;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 13px;
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+    }
+
+    .cable-control-btn.undo {
+      background-color: var(--accent);
+      color: white;
+    }
+
+    .cable-control-btn.cancel {
+      background-color: var(--error);
+      color: white;
+    }
+    
+    .cable-control-btn.finish {
+      background-color: var(--success);
+      color: white;
+      grid-column: span 2;
+    }
+
+    .cable-control-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .drawing-status {
+      background-color: var(--primary);
+      color: white;
+      padding: 8px;
+      border-radius: 8px;
+      text-align: center;
+      margin-top: 10px;
+      font-size: 13px;
+      display: none;
+    }
+
     /* Responsive */
     @media (max-width: 992px) {
       .main-content {
@@ -695,6 +749,9 @@
           <option value="c12">C-12</option>
           <option value="emp">EMPALME</option>
           <option value="pzo">POZO</option>
+          <option value="ont">ONT</option>
+           <option value="odf">ODF</option>
+           <option value="box">HUBBOX</option>
         </select>
 
         <button id="add-gps-btn" title="Agregar activo con GPS">
@@ -780,6 +837,23 @@
           <div class="distance-display" id="cable-distance">Distancia: 0.00 metros</div>
           <div class="distance-display" id="segment-distance">Último segmento: 0.00 metros</div>
 
+          <!-- Nuevos controles para cable -->
+          <div class="cable-controls" id="cable-controls" style="display: none;">
+            <button class="cable-control-btn undo" id="undo-cable-point" disabled>
+              <i class="fas fa-undo"></i> Deshacer
+            </button>
+            <button class="cable-control-btn cancel" id="cancel-cable-drawing">
+              <i class="fas fa-times"></i> Cancelar
+            </button>
+            <button class="cable-control-btn finish" id="finish-cable-drawing" disabled>
+              <i class="fas fa-check"></i> Finalizar Cable
+            </button>
+          </div>
+
+          <div class="drawing-status" id="drawing-status">
+            <i class="fas fa-drawing-pin"></i> Dibujando cable - Haz clic para agregar puntos
+          </div>
+
           <div class="cable-totals" id="cable-totals">
             <div class="cable-total fo">
               <div class="cable-total-value" id="total-fo">0 m</div>
@@ -856,7 +930,7 @@
         <div class="hint">
           <i class="fas fa-lightbulb"></i> Consejo: Haz clic en el mapa para agregar un activo
           del tipo seleccionado. Para cables, haz clic en varios puntos para crear una ruta.
-          Doble clic para finalizar.
+          Usa el botón "Finalizar Cable" para terminar.
         </div>
 
         <div class="copyright">
@@ -915,6 +989,9 @@
             <option value="c12">C-12</option>
             <option value="emp">EMPALME</option>
             <option value="pzo">POZO</option>
+             <option value="ont">ONT</option>
+           <option value="odf">ODF</option>
+           <option value="box">HUBBOX</option>
           </select>
         </div>
         <div class="gps-row">
@@ -960,10 +1037,14 @@
     let tempPolylines = [];
 
     let selectedExportFormat = null;
+    
+    // Nuevas variables para control de ubicación
+    let currentLocationMarker = null;
+    let currentAccuracyCircle = null;
 
     // Íconos personalizados por tipo
-const ICONS = {
-   pole: L.icon({
+    const ICONS = {
+      pole: L.icon({
         iconUrl:
           "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-grey.png",
         shadowUrl:
@@ -974,57 +1055,77 @@ const ICONS = {
         shadowSize: [41, 41],
       }),
 
-  nap: L.icon({
-    iconUrl: "nap.png",
-    shadowUrl: "icons/shadow.png",
-    iconSize: [32, 32],
-    iconAnchor: [16, 32],
-    popupAnchor: [0, -28],
-  }),
-  fat: L.icon({
-    iconUrl: "fat.png",
-    shadowUrl: "icons/shadow.png",
-    iconSize: [32, 32],
-    iconAnchor: [16, 32],
-    popupAnchor: [0, -28],
-  }),
-  olt: L.icon({
-    iconUrl: "olt.png",
-    shadowUrl: "icons/shadow.png",
-    iconSize: [32, 32],
-    iconAnchor: [16, 32],
-    popupAnchor: [0, -28],
-  }),
-  c12: L.icon({
-    iconUrl: "c12.png",
-    shadowUrl: "icons/shadow.png",
-    iconSize: [32, 32],
-    iconAnchor: [16, 32],
-    popupAnchor: [0, -28],
-  }),
-emp: L.icon({
-    iconUrl: "empalme.png",
-    shadowUrl: "icons/shadow.png",
-    iconSize: [32, 32],
-    iconAnchor: [16, 32],
-    popupAnchor: [0, -28],
-  }),
-pzo: L.icon({
-    iconUrl: "pozo.png",
-    shadowUrl: "icons/shadow.png",
-    iconSize: [32, 32],
-    iconAnchor: [16, 32],
-    popupAnchor: [0, -28],
-  }),
-  default: L.icon({
-    iconUrl: "icons/default.png",
-    shadowUrl: "icons/shadow.png",
-    iconSize: [32, 32],
-    iconAnchor: [16, 32],
-    popupAnchor: [0, -28],
-  }),
-};
-
+      nap: L.icon({
+        iconUrl: "nap.png",
+        shadowUrl: "icons/shadow.png",
+        iconSize: [32, 32],
+        iconAnchor: [16, 32],
+        popupAnchor: [0, -28],
+      }),
+      fat: L.icon({
+        iconUrl: "fat.png",
+        shadowUrl: "icons/shadow.png",
+        iconSize: [32, 32],
+        iconAnchor: [16, 32],
+        popupAnchor: [0, -28],
+      }),
+      olt: L.icon({
+        iconUrl: "olt.png",
+        shadowUrl: "icons/shadow.png",
+        iconSize: [32, 32],
+        iconAnchor: [16, 32],
+        popupAnchor: [0, -28],
+      }),
+      c12: L.icon({
+        iconUrl: "c12.png",
+        shadowUrl: "icons/shadow.png",
+        iconSize: [32, 32],
+        iconAnchor: [16, 32],
+        popupAnchor: [0, -28],
+      }),
+      emp: L.icon({
+        iconUrl: "empalme.png",
+        shadowUrl: "icons/shadow.png",
+        iconSize: [32, 32],
+        iconAnchor: [16, 32],
+        popupAnchor: [0, -28],
+      }),
+      pzo: L.icon({
+        iconUrl: "pozo.png",
+        shadowUrl: "icons/shadow.png",
+        iconSize: [32, 32],
+        iconAnchor: [16, 32],
+        popupAnchor: [0, -28],
+      }),
+      default: L.icon({
+        iconUrl: "icons/default.png",
+        shadowUrl: "icons/shadow.png",
+        iconSize: [32, 32],
+        iconAnchor: [16, 32],
+        popupAnchor: [0, -28],
+      }),
+    ont: L.icon({
+        iconUrl: "ont.png",
+        shadowUrl: "icons/shadow.png",
+        iconSize: [32, 32],
+        iconAnchor: [16, 32],
+        popupAnchor: [0, -28],
+      }),
+       odf: L.icon({
+        iconUrl: "odf.png",
+        shadowUrl: "icons/shadow.png",
+        iconSize: [32, 32],
+        iconAnchor: [16, 32],
+        popupAnchor: [0, -28],
+      }),
+       box: L.icon({
+        iconUrl: "box.png",
+        shadowUrl: "icons/shadow.png",
+        iconSize: [32, 32],
+        iconAnchor: [16, 32],
+        popupAnchor: [0, -28],
+      }),
+    };
 
     // =========================
     // Inicialización del mapa
@@ -1066,14 +1167,16 @@ pzo: L.icon({
         const type = document.getElementById("asset-type-selector").value;
         if (type === "cab") {
           // Dibujo de cable
-          drawingCable = true;
+          if (!drawingCable) {
+            startCableDrawing();
+          }
           addCablePoint(e.latlng);
         } else {
           addAsset(e.latlng.lat, e.latlng.lng);
         }
       });
 
-      // Doble clic para finalizar cable
+      // Doble clic para finalizar cable (mantenido por compatibilidad)
       map.on("dblclick", (e) => {
         if (drawingCable && cablePoints.length > 1) {
           finishCableDrawing();
@@ -1162,6 +1265,9 @@ pzo: L.icon({
         olt: "OLT",
         c12: "C-12",
         emp: "EMPALME",
+        ont: "ONT",
+        odf: "ODF",
+        box: "HUBBOX"
 
       };
 
@@ -1405,9 +1511,22 @@ pzo: L.icon({
     }
 
     // =========================
-    // Cables
+    // Cables - Funciones mejoradas
     // =========================
+    function startCableDrawing() {
+      drawingCable = true;
+      cablePoints = [];
+      
+      // Mostrar controles de cable
+      document.getElementById("cable-controls").style.display = "grid";
+      document.getElementById("drawing-status").style.display = "block";
+      document.getElementById("undo-cable-point").disabled = true;
+      document.getElementById("finish-cable-drawing").disabled = true;
+    }
+
     function addCablePoint(latlng) {
+      if (!drawingCable) return;
+      
       cablePoints.push(latlng);
 
       // Punto temporal
@@ -1449,9 +1568,104 @@ pzo: L.icon({
           last
         );
       }
+      
+      // Habilitar botones según cantidad de puntos
+      document.getElementById("undo-cable-point").disabled = cablePoints.length === 0;
+      document.getElementById("finish-cable-drawing").disabled = cablePoints.length < 2;
+    }
+
+    function undoLastCablePoint() {
+      if (cablePoints.length === 0) return;
+      
+      // Eliminar último punto y elementos temporales asociados
+      cablePoints.pop();
+      
+      // Eliminar marcador temporal
+      if (tempMarkers.length > 0) {
+        const lastMarker = tempMarkers.pop();
+        map.removeLayer(lastMarker);
+      }
+      
+      // Eliminar polyline temporal
+      if (tempPolylines.length > 0) {
+        const lastPolyline = tempPolylines.pop();
+        map.removeLayer(lastPolyline);
+      }
+      
+      // Eliminar etiqueta de distancia del último segmento
+      if (distanceLabels.length > 0) {
+        const lastLabel = distanceLabels.pop();
+        map.removeLayer(lastLabel);
+      }
+      
+      // Redibujar polyline si aún quedan puntos
+      if (cablePoints.length > 1) {
+        const pl = L.polyline(cablePoints, {
+          color: currentCableType === "fo" ? "#3b82f6" : "#f59e0b",
+          weight: 3,
+          dashArray: "5, 10",
+        }).addTo(map);
+        tempPolylines.push(pl);
+        
+        // Recalcular distancia total
+        const total = calculateTotalDistance(cablePoints);
+        updateDistanceDisplay(total);
+        
+        // Actualizar último segmento
+        if (cablePoints.length > 1) {
+          const last = calculateDistance(
+            cablePoints[cablePoints.length - 2].lat,
+            cablePoints[cablePoints.length - 2].lng,
+            cablePoints[cablePoints.length - 1].lat,
+            cablePoints[cablePoints.length - 1].lng
+          );
+          document.getElementById(
+            "segment-distance"
+          ).textContent = `Último segmento: ${last.toFixed(2)} metros`;
+        } else {
+          document.getElementById("segment-distance").textContent = "Último segmento: 0.00 metros";
+        }
+      } else {
+        // Si solo queda un punto o ninguno
+        updateDistanceDisplay(0);
+        document.getElementById("segment-distance").textContent = "Último segmento: 0.00 metros";
+      }
+      
+      // Actualizar estado de los botones
+      document.getElementById("undo-cable-point").disabled = cablePoints.length === 0;
+      document.getElementById("finish-cable-drawing").disabled = cablePoints.length < 2;
+    }
+
+    function cancelCableDrawing() {
+      if (!drawingCable) return;
+      
+      // Limpiar todos los elementos temporales
+      tempMarkers.forEach((m) => map.removeLayer(m));
+      tempPolylines.forEach((l) => map.removeLayer(l));
+      tempMarkers = [];
+      tempPolylines = [];
+      cablePoints = [];
+      drawingCable = false;
+      
+      // Limpiar etiquetas de distancia temporales
+      distanceLabels.forEach((label) => map.removeLayer(label));
+      distanceLabels = [];
+      
+      // Ocultar controles de cable
+      document.getElementById("cable-controls").style.display = "none";
+      document.getElementById("drawing-status").style.display = "none";
+      
+      // Restablecer displays de distancia
+      updateDistanceDisplay(0);
+      document.getElementById("segment-distance").textContent = "Último segmento: 0.00 metros";
     }
 
     function finishCableDrawing() {
+      if (!drawingCable || cablePoints.length < 2) {
+        cancelCableDrawing();
+        return;
+      }
+
       const id = generateId();
       const totalDistance = calculateTotalDistance(cablePoints);
 
@@ -1474,6 +1688,10 @@ pzo: L.icon({
       tempPolylines = [];
       cablePoints = [];
       drawingCable = false;
+
+      // Ocultar controles de cable
+      document.getElementById("cable-controls").style.display = "none";
+      document.getElementById("drawing-status").style.display = "none";
 
       updateDistanceDisplay(0);
       document.getElementById("segment-distance").textContent =
@@ -1566,6 +1784,106 @@ pzo: L.icon({
         totalDrop.toFixed(0) + " m";
     }
 
+    // =========================
+    // Funciones de ubicación mejoradas
+    // =========================
+    function showCurrentLocation(position) {
+      const lat = position.coords.latitude;
+      const lng = position.coords.longitude;
+      const accuracy = position.coords.accuracy;
+      
+      // Eliminar marcador anterior si existe
+      if (currentLocationMarker) {
+        map.removeLayer(currentLocationMarker);
+      }
+      if (currentAccuracyCircle) {
+        map.removeLayer(currentAccuracyCircle);
+      }
+      
+      // Crear marcador de ubicación
+      currentLocationMarker = L.marker([lat, lng], {
+        icon: L.icon({
+          iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png',
+          shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+          iconSize: [25, 41],
+          iconAnchor: [12, 41],
+          popupAnchor: [1, -34],
+          shadowSize: [41, 41]
+        })
+      }).addTo(map);
+      
+      // Crear círculo de precisión
+      currentAccuracyCircle = L.circle([lat, lng], {
+        radius: accuracy,
+        color: '#00AA00',
+        fillColor: '#00AA00',
+        fillOpacity: 0.2,
+        weight: 1
+      }).addTo(map);
+      
+      // Centrar mapa en la ubicación
+      map.setView([lat, lng], 17);
+      
+      // Agregar popup informativo
+      currentLocationMarker.bindPopup(`
+        <div class="popup-content">
+          <div class="popup-title">Tu ubicación actual</div>
+          <div class="popup-coords">${lat.toFixed(6)}, ${lng.toFixed(6)}</div>
+          <div class="popup-coords">Precisión: ±${accuracy.toFixed(1)} metros</div>
+          <div class="popup-actions">
+            <button class="popup-btn" onclick="clearCurrentLocation()">Cerrar</button>
+          </div>
+        </div>
+      `).openPopup();
+    }
+    
+    function clearCurrentLocation() {
+      if (currentLocationMarker) {
+        map.removeLayer(currentLocationMarker);
+        currentLocationMarker = null;
+      }
+      if (currentAccuracyCircle) {
+        map.removeLayer(currentAccuracyCircle);
+        currentAccuracyCircle = null;
+      }
+    }
+
+    function locateUser() {
+      if (!navigator.geolocation) {
+        alert("La geolocalización no es compatible con este navegador.");
+        return;
+      }
+      
+      // Opciones para mayor precisión
+      const options = {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0
+      };
+      
+      navigator.geolocation.getCurrentPosition(
+        showCurrentLocation,
+        (error) => {
+          let errorMsg = "Error al obtener la ubicación: ";
+          switch(error.code) {
+            case error.PERMISSION_DENIED:
+              errorMsg += "Permiso denegado";
+              break;
+            case error.POSITION_UNAVAILABLE:
+              errorMsg += "Posición no disponible";
+              break;
+            case error.TIMEOUT:
+              errorMsg += "Tiempo de espera agotado";
+              break;
+            default:
+              errorMsg += "Error desconocido";
+          }
+          alert(errorMsg);
+        },
+        options
+      );
+    }
+
     function switchMapType(type) {
       if (currentMapType === type) return;
 
@@ -1644,28 +1962,32 @@ pzo: L.icon({
       downloadFile(filename, csvContent, "text/csv;charset=utf-8;");
     }
 
-  function exportToKML() {
-  let kmlContent = `<?xml version="1.0" encoding="UTF-8"?>
+    function exportToKML() {
+      let kmlContent = `<?xml version="1.0" encoding="UTF-8"?>
 <kml xmlns="http://www.opengis.net/kml/2.2">
   <Document>
     <name>FTTH Map Export</name>
     <description>Exportado desde FTTH-SV-RT</description>`;
 
-  // Mapeo de iconos según tipo de activo
-  const iconMap = {
-    pole: "http://maps.google.com/mapfiles/kml/paddle/P.png",
-    nap: "http://maps.google.com/mapfiles/kml/paddle/N.png",
-    fat: "http://maps.google.com/mapfiles/kml/paddle/F.png",
-    c12: "http://maps.google.com/mapfiles/kml/paddle/C.png"
-  };
+      // Mapeo de iconos según tipo de activo
+      const iconMap = {
+        pole: "http://maps.google.com/mapfiles/kml/paddle/P.png",
+        nap: "http://maps.google.com/mapfiles/kml/paddle/N.png",
+        fat: "http://maps.google.com/mapfiles/kml/paddle/F.png",
+        c12: "http://maps.google.com/mapfiles/kml/paddle/C.png",
+        odf: "http://maps.google.com/mapfiles/kml/paddle/O.png",
+        box: "http://maps.google.com/mapfiles/kml/paddle/B.png",
+        emp: "http://maps.google.com/mapfiles/kml/paddle/E.png",
+        pzo: "http://maps.google.com/mapfiles/kml/paddle/Z.png",
+      };
 
-  // Añadir marcadores
-  assets
-    .filter(asset => asset.type !== "cab")
-    .forEach(asset => {
-      const iconUrl = iconMap[asset.type] || "http://maps.google.com/mapfiles/kml/paddle/wht-blank.png";
+      // Añadir marcadores
+      assets
+        .filter(asset => asset.type !== "cab")
+        .forEach(asset => {
+          const iconUrl = iconMap[asset.type] || "http://maps.google.com/mapfiles/kml/paddle/wht-blank.png";
 
-      kmlContent += `
+          kmlContent += `
     <Placemark>
       <name>${escapeXML(asset.label)}</name>
       <description>Tipo: ${asset.type}</description>
@@ -1680,16 +2002,16 @@ pzo: L.icon({
         <coordinates>${asset.lng},${asset.lat},0</coordinates>
       </Point>
     </Placemark>`;
-    });
+        });
 
-  // Añadir cables (líneas + etiquetas intermedias)
-  assets
-    .filter(asset => asset.type === "cab")
-    .forEach(asset => {
-      const color = asset.cableType === "fo" ? "ff0000ff" : "ff00aaff"; // Azul FO, cian DROP
+      // Añadir cables (líneas + etiquetas intermedias)
+      assets
+        .filter(asset => asset.type === "cab")
+        .forEach(asset => {
+          const color = asset.cableType === "fo" ? "ff0000ff" : "ff00aaff"; // Azul FO, cian DROP
 
-      // Cable completo
-      kmlContent += `
+          // Cable completo
+          kmlContent += `
     <Placemark>
       <name>${escapeXML(asset.label)} (${asset.distance.toFixed(2)} m)</name>
       <description>${asset.distance.toFixed(2)} metros - Tipo: ${asset.cableType}</description>
@@ -1704,29 +2026,29 @@ pzo: L.icon({
       </LineString>
     </Placemark>`;
 
-      // Tramos intermedios con etiquetas
-      for (let i = 0; i < asset.points.length - 1; i++) {
-        const [lat1, lng1] = asset.points[i];
-        const [lat2, lng2] = asset.points[i + 1];
+          // Tramos intermedios con etiquetas
+          for (let i = 0; i < asset.points.length - 1; i++) {
+            const [lat1, lng1] = asset.points[i];
+            const [lat2, lng2] = asset.points[i + 1];
 
-        // Calcular distancia en metros
-        const R = 6371000; // radio tierra m
-        const toRad = x => (x * Math.PI) / 180;
-        const dLat = toRad(lat2 - lat1);
-        const dLng = toRad(lng2 - lng1);
-        const a =
-          Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-          Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
-          Math.sin(dLng / 2) * Math.sin(dLng / 2);
-        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-        const dist = R * c;
+            // Calcular distancia en metros
+            const R = 6371000; // radio tierra m
+            const toRad = x => (x * Math.PI) / 180;
+            const dLat = toRad(lat2 - lat1);
+            const dLng = toRad(lng2 - lng1);
+            const a =
+              Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+              Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+              Math.sin(dLng / 2) * Math.sin(dLng / 2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            const dist = R * c;
 
-        // Punto medio
-        const midLat = (lat1 + lat2) / 2;
-        const midLng = (lng1 + lng2) / 2;
+            // Punto medio
+            const midLat = (lat1 + lat2) / 2;
+            const midLng = (lng1 + lng2) / 2;
 
-        // Etiqueta en el punto medio
-        kmlContent += `
+            // Etiqueta en el punto medio
+            kmlContent += `
     <Placemark>
       <name>${dist.toFixed(2)} m</name>
       <Style>
@@ -1742,18 +2064,16 @@ pzo: L.icon({
         <coordinates>${midLng},${midLat},0</coordinates>
       </Point>
     </Placemark>`;
-      }
-    });
+          }
+        });
 
-  kmlContent += `
+      kmlContent += `
   </Document>
 </kml>`;
 
-  const filename = `ftth_map_export_${new Date().toISOString().slice(0, 10)}.kml`;
-  downloadFile(filename, kmlContent, "application/vnd.google-earth.kml+xml;charset=utf-8;");
-}
-
-
+      const filename = `ftth_map_export_${new Date().toISOString().slice(0, 10)}.kml`;
+      downloadFile(filename, kmlContent, "application/vnd.google-earth.kml+xml;charset=utf-8;");
+    }
 
     function importCSV(content) {
       // Implementar lógica de importación CSV
@@ -1793,6 +2113,9 @@ pzo: L.icon({
       tempPolylines = [];
       cablePoints = [];
       drawingCable = false;
+      
+      // Limpiar ubicación actual
+      clearCurrentLocation();
 
       // Limpiar datos
       assets = [];
@@ -1858,7 +2181,7 @@ pzo: L.icon({
                          `${type.toUpperCase()}_GPS_${new Date().getTime().toString().slice(-4)}`;
             
             document.getElementById("asset-type-selector").value = type;
-            addAsset(lat, lng, label);
+            addAsset(lat, lng);
             closeGpsModal();
           }
         },
@@ -1925,21 +2248,7 @@ pzo: L.icon({
 
       // Botones de control del mapa
       document.getElementById("locate-me-btn").addEventListener("click", function() {
-        if (navigator.geolocation) {
-          navigator.geolocation.getCurrentPosition(
-            (position) => {
-              map.setView(
-                [position.coords.latitude, position.coords.longitude],
-                16
-              );
-            },
-            (error) => {
-              alert("No se pudo obtener la ubicación: " + error.message);
-            }
-          );
-        } else {
-          alert("La geolocalización no es compatible con este navegador.");
-        }
+        locateUser();
       });
 
       document.getElementById("zoom-in-btn").addEventListener("click", function() {
@@ -2011,6 +2320,11 @@ pzo: L.icon({
         
         addAsset(lat, lng);
       });
+
+      // Controles de cable
+      document.getElementById("undo-cable-point").addEventListener("click", undoLastCablePoint);
+      document.getElementById("cancel-cable-drawing").addEventListener("click", cancelCableDrawing);
+      document.getElementById("finish-cable-drawing").addEventListener("click", finishCableDrawing);
 
       // Limpiar pantalla
       document.getElementById("clear-screen").addEventListener("click", clearAllData);
