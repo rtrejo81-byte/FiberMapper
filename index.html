@@ -2,24 +2,15 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1, maximum-scale=1"
-  />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
   <title>FTTH-SV-RT - Sistema de Mapeo</title>
 
   <!-- Leaflet -->
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-  />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
   <!-- Font Awesome -->
-  <link
-    rel="stylesheet"
-    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-  />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 
   <style>
     :root {
@@ -521,7 +512,8 @@
     /* Modal de exportación */
     .export-modal,
     .gps-modal,
-    .nap-modal {
+    .nap-modal,
+    .photo-modal {
       position: fixed;
       inset: 0;
       width: 100%;
@@ -534,7 +526,8 @@
     }
     .export-content,
     .gps-content,
-    .nap-content {
+    .nap-content,
+    .photo-content {
       background-color: var(--surface);
       padding: 16px;
       border-radius: 12px;
@@ -627,6 +620,21 @@
       text-align: center;
     }
 
+    /* Modal para fotos */
+    .photo-preview {
+      max-width: 100%;
+      max-height: 200px;
+      border-radius: 8px;
+      margin: 10px 0;
+      display: none;
+    }
+    .photo-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
     .hint {
       background-color: var(--primary);
       padding: 12px;
@@ -696,6 +704,50 @@
       margin-top: 10px;
       font-size: 13px;
       display: none;
+    }
+
+    /* Puntero de precisión */
+    .precision-pointer {
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      border: 2px solid #f00;
+      border-radius: 50%;
+      background-color: rgba(255, 0, 0, 0.2);
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      z-index: 1000;
+      display: none;
+    }
+
+    .precision-crosshair {
+      position: absolute;
+      width: 30px;
+      height: 30px;
+      pointer-events: none;
+      z-index: 1000;
+      display: none;
+    }
+
+    .precision-crosshair::before,
+    .precision-crosshair::after {
+      content: '';
+      position: absolute;
+      background-color: #f00;
+    }
+
+    .precision-crosshair::before {
+      width: 2px;
+      height: 30px;
+      left: 14px;
+      top: 0;
+    }
+
+    .precision-crosshair::after {
+      width: 30px;
+      height: 2px;
+      left: 0;
+      top: 14px;
     }
 
     /* Responsive */
@@ -939,7 +991,6 @@
                 <option value="ont">ONT</option>
                 <option value="odf">ODF</option>
                 <option value="box">HUBBOX</option>
-
               </select>
 
               <span class="editor-label">Latitud:</span>
@@ -953,6 +1004,9 @@
             </div>
             <button class="delete-btn" id="delete-asset">
               <i class="fas fa-trash"></i> Eliminar Activo
+            </button>
+            <button class="popup-btn" id="add-photo-btn" style="margin-top: 10px; width: 100%;">
+              <i class="fas fa-camera"></i> Agregar Foto
             </button>
           </div>
           <div id="no-selection-message">Selecciona un activo del mapa o de la lista para editarlo.</div>
@@ -1025,8 +1079,8 @@
             <option value="emp">EMPALME</option>
             <option value="pzo">POZO</option>
             <option value="ont">ONT</option>
-          <option value="odf">ODF</option>
-          <option value="box">HUBBOX</option>
+            <option value="odf">ODF</option>
+            <option value="box">HUBBOX</option>
           </select>
         </div>
         <div class="gps-row">
@@ -1077,6 +1131,34 @@
     </div>
   </div>
 
+  <!-- Modal para agregar foto -->
+  <div class="photo-modal" id="photo-modal">
+    <div class="photo-content">
+      <h2 style="margin-bottom:8px;">Agregar foto al activo</h2>
+      <div id="photo-preview-container" style="text-align: center;">
+        <img id="photo-preview" class="photo-preview" alt="Vista previa">
+      </div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+        <label for="camera-input" class="file-upload-label">
+          <i class="fas fa-camera"></i> Cámara
+          <input type="file" id="camera-input" accept="image/*" capture="environment">
+        </label>
+        <label for="gallery-input" class="file-upload-label">
+          <i class="fas fa-image"></i> Galería
+          <input type="file" id="gallery-input" accept="image/*">
+        </label>
+      </div>
+      <div class="photo-actions">
+        <button class="btn-outline" id="photo-cancel">Cancelar</button>
+        <button class="btn-primary" id="photo-confirm">Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Puntero de precisión -->
+  <div class="precision-pointer" id="precision-pointer"></div>
+  <div class="precision-crosshair" id="precision-crosshair"></div>
+
   <script>
     // =========================
     // Estado de la aplicación
@@ -1109,90 +1191,104 @@
     let currentLocationMarker = null;
     let currentAccuracyCircle = null;
 
+    // Variables para el puntero de precisión y fotos
+    let precisionPointer = null;
+    let precisionCrosshair = null;
+    let currentPhotoData = null;
+    let currentAssetForPhoto = null;
+
     // Íconos personalizados por tipo
     const ICONS = {
       pole: L.icon({
-        iconUrl:
-          "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-grey.png",
-        shadowUrl:
-          "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+        iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-grey.png",
+        shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
         iconSize: [25, 41],
         iconAnchor: [12, 41],
         popupAnchor: [1, -34],
         shadowSize: [41, 41],
       }),
-
-       nap: L.icon({
-    iconUrl: "nap.png",
-    shadowUrl: "icons/shadow.png",
-    iconSize: [32, 32],
-    iconAnchor: [16, 32],
-    popupAnchor: [0, -28],
-  }),
-  fat: L.icon({
-    iconUrl: "fat.png",
-    shadowUrl: "icons/shadow.png",
-    iconSize: [32, 32],
-    iconAnchor: [16, 32],
-    popupAnchor: [0, -28],
-  }),
-  olt: L.icon({
-    iconUrl: "olt.png",
-    shadowUrl: "icons/shadow.png",
-    iconSize: [32, 32],
-    iconAnchor: [16, 32],
-    popupAnchor: [0, -28],
-  }),
-  c12: L.icon({
-    iconUrl: "c12.png",
-    shadowUrl: "icons/shadow.png",
-    iconSize: [32, 32],
-    iconAnchor: [16, 32],
-    popupAnchor: [0, -28],
-  }),
-emp: L.icon({
-    iconUrl: "empalme.png",
-    shadowUrl: "icons/shadow.png",
-    iconSize: [32, 32],
-    iconAnchor: [16, 32],
-    popupAnchor: [0, -28],
-  }),
-pzo: L.icon({
-    iconUrl: "pozo.png",
-    shadowUrl: "icons/shadow.png",
-    iconSize: [32, 32],
-    iconAnchor: [16, 32],
-    popupAnchor: [0, -28],
-  }),
-  default: L.icon({
-    iconUrl: "icons/default.png",
-    shadowUrl: "icons/shadow.png",
-    iconSize: [32, 32],
-    iconAnchor: [16, 32],
-    popupAnchor: [0, -28],
-  }),
+      nap: L.icon({
+        iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-blue.png",
+        shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34],
+        shadowSize: [41, 41],
+      }),
+      fat: L.icon({
+        iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png",
+        shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34],
+        shadowSize: [41, 41],
+      }),
+      olt: L.icon({
+        iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png",
+        shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34],
+        shadowSize: [41, 41],
+      }),
+      c12: L.icon({
+        iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-orange.png",
+        shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34],
+        shadowSize: [41, 41],
+      }),
+      emp: L.icon({
+        iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-yellow.png",
+        shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34],
+        shadowSize: [41, 41],
+      }),
+      pzo: L.icon({
+        iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-violet.png",
+        shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34],
+        shadowSize: [41, 41],
+      }),
       ont: L.icon({
-    iconUrl: "ont.png",
-    shadowUrl: "icons/shadow.png",
-    iconSize: [32, 32],
-    iconAnchor: [16, 32],
-    popupAnchor: [0, -28],
-  }),
-    odf: L.icon({
-    iconUrl: "odf.png",
-    shadowUrl: "icons/shadow.png",
-    iconSize: [32, 32],
-    iconAnchor: [16, 32],
-    popupAnchor: [0, -28],
-    }),
-    box: L.icon({
-    iconUrl: "box.png",
-    shadowUrl: "icons/shadow.png",
-    iconSize: [32, 32],
-    iconAnchor: [16, 32],
-    popupAnchor: [0, -28],
-   }),
-  };
+        iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-gold.png",
+        shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34],
+        shadowSize: [41, 41],
+      }),
+      odf: L.icon({
+        iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-black.png",
+        shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34],
+        shadowSize: [41, 41],
+      }),
+      box: L.icon({
+        iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-pink.png",
+        shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34],
+        shadowSize: [41, 41],
+      }),
+      default: L.icon({
+        iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-blue.png",
+        shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34],
+        shadowSize: [41, 41],
+      }),
+    };
+
     // =========================
     // Inicialización del mapa
     // =========================
@@ -1202,8 +1298,7 @@ pzo: L.icon({
       standardTileLayer = L.tileLayer(
         "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
         {
-          attribution:
-            '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
           maxZoom: 19,
         }
       );
@@ -1227,6 +1322,35 @@ pzo: L.icon({
       );
 
       standardTileLayer.addTo(map);
+
+      // Inicializar puntero de precisión
+      precisionPointer = document.getElementById('precision-pointer');
+      precisionCrosshair = document.getElementById('precision-crosshair');
+      
+      // Mostrar puntero al mover el mouse
+      map.on('mousemove', function(e) {
+        const containerPoint = map.latLngToContainerPoint(e.latlng);
+        precisionPointer.style.left = containerPoint.x + 'px';
+        precisionPointer.style.top = containerPoint.y + 'px';
+        precisionCrosshair.style.left = containerPoint.x + 'px';
+        precisionCrosshair.style.top = containerPoint.y + 'px';
+        
+        // Mostrar solo cuando se esté dibujando o agregando activos
+        const assetType = document.getElementById("asset-type-selector").value;
+        if (assetType === "cab" || drawingCable) {
+          precisionPointer.style.display = 'block';
+          precisionCrosshair.style.display = 'block';
+        } else {
+          precisionPointer.style.display = 'none';
+          precisionCrosshair.style.display = 'none';
+        }
+      });
+      
+      // Ocultar puntero al salir del mapa
+      map.getContainer().addEventListener('mouseleave', function() {
+        precisionPointer.style.display = 'none';
+        precisionCrosshair.style.display = 'none';
+      });
 
       // Click en mapa para agregar activo o dibujar cable
       map.on("click", (e) => {
@@ -1403,7 +1527,7 @@ pzo: L.icon({
         selectAsset(asset.id);
       });
 
-      // Popup mejorado para NAPs con foto
+      // Popup mejorado para activos con foto
       let popupContent = `
         <div class="popup-content">
           <div class="popup-title">${asset.label}</div>
@@ -1425,6 +1549,7 @@ pzo: L.icon({
       popupContent += `
           <div class="popup-actions">
             <button class="popup-btn" onclick="selectAsset('${asset.id}')">Editar</button>
+            <button class="popup-btn" onclick="openPhotoModal('${asset.id}')">${asset.photo ? 'Cambiar Foto' : 'Agregar Foto'}</button>
             <button class="popup-btn" onclick="deleteAsset('${asset.id}')">Eliminar</button>
           </div>
         </div>
@@ -1687,6 +1812,54 @@ pzo: L.icon({
         napPhotoData = e.target.result;
         const preview = document.getElementById("nap-photo-preview");
         preview.src = napPhotoData;
+        preview.style.display = "block";
+      };
+      reader.readAsDataURL(file);
+    }
+
+    // =========================
+    // Funciones para manejo de fotos
+    // =========================
+    function openPhotoModal(assetId) {
+      currentAssetForPhoto = assetId;
+      currentPhotoData = null;
+      
+      // Limpiar vista previa
+      document.getElementById("photo-preview").style.display = "none";
+      document.getElementById("photo-preview").src = "";
+      
+      // Mostrar modal
+      document.getElementById("photo-modal").style.display = "flex";
+    }
+
+    function closePhotoModal() {
+      document.getElementById("photo-modal").style.display = "none";
+      currentAssetForPhoto = null;
+      currentPhotoData = null;
+    }
+
+    function savePhoto() {
+      if (!currentAssetForPhoto || !currentPhotoData) return;
+      
+      // Actualizar el asset con la foto
+      updateAsset(currentAssetForPhoto, { photo: currentPhotoData });
+      closePhotoModal();
+    }
+
+    function handlePhotoUpload(event, isCamera) {
+      const file = event.target.files[0];
+      if (!file) return;
+      
+      if (!file.type.match('image.*')) {
+        alert("Por favor selecciona solo archivos de imagen");
+        return;
+      }
+      
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        currentPhotoData = e.target.result;
+        const preview = document.getElementById("photo-preview");
+        preview.src = currentPhotoData;
         preview.style.display = "block";
       };
       reader.readAsDataURL(file);
@@ -2145,22 +2318,26 @@ pzo: L.icon({
       downloadFile(filename, csvContent, "text/csv;charset=utf-8;");
     }
 
-    function exportToKML() {
+    function exportToKML(forWhatsApp = false) {
       let kmlContent = `<?xml version="1.0" encoding="UTF-8"?>
 <kml xmlns="http://www.opengis.net/kml/2.2">
   <Document>
     <name>FTTH Map Export</name>
-    <description>Exportado desde FTTH-SV-RT</description>
-    // Mapeo de iconos según tipo de activo
-  const iconMap = {
-    pole: "http://maps.google.com/mapfiles/kml/paddle/P.png",
-    nap: "http://maps.google.com/mapfiles/kml/paddle/N.png",
-    fat: "http://maps.google.com/mapfiles/kml/paddle/F.png",
-    c12: "http://maps.google.com/mapfiles/kml/paddle/C.png"
-     ont: "http://maps.google.com/mapfiles/kml/paddle/C.png"
-      odf: "http://maps.google.com/mapfiles/kml/paddle/O.png"
-       box: "http://maps.google.com/mapfiles/kml/paddle/B.png"
-};
+    <description>Exportado desde FTTH-SV-RT</description>`;
+
+      // Mapeo de iconos según tipo de activo
+      const iconMap = {
+        pole: "http://maps.google.com/mapfiles/kml/paddle/P.png",
+        nap: "http://maps.google.com/mapfiles/kml/paddle/N.png",
+        fat: "http://maps.google.com/mapfiles/kml/paddle/F.png",
+        c12: "http://maps.google.com/mapfiles/kml/paddle/C.png",
+        ont: "http://maps.google.com/mapfiles/kml/paddle/C.png",
+        odf: "http://maps.google.com/mapfiles/kml/paddle/O.png",
+        box: "http://maps.google.com/mapfiles/kml/paddle/B.png"
+      };
+
+      // Agregar estilos para activos con foto
+      kmlContent += `
     <Style id="photoStyle">
       <IconStyle>
         <Icon>
@@ -2174,6 +2351,7 @@ pzo: L.icon({
         .filter(asset => asset.type !== "cab")
         .forEach(asset => {
           const hasPhoto = asset.photo ? ' styleUrl="#photoStyle"' : '';
+          const iconUrl = iconMap[asset.type] || "http://maps.google.com/mapfiles/kml/paddle/wht-blank.png";
           
           kmlContent += `
     <Placemark${hasPhoto}>
@@ -2189,6 +2367,13 @@ pzo: L.icon({
           </div>
         ]]>
       </description>
+      <Style>
+        <IconStyle>
+          <Icon>
+            <href>${iconUrl}</href>
+          </Icon>
+        </IconStyle>
+      </Style>
       <Point>
         <coordinates>${asset.lng},${asset.lat},0</coordinates>
       </Point>
@@ -2223,16 +2408,7 @@ pzo: L.icon({
             const [lat2, lng2] = asset.points[i + 1];
 
             // Calcular distancia en metros
-            const R = 6371000; // radio tierra m
-            const toRad = x => (x * Math.PI) / 180;
-            const dLat = toRad(lat2 - lat1);
-            const dLng = toRad(lng2 - lng1);
-            const a =
-              Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-              Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
-              Math.sin(dLng / 2) * Math.sin(dLng / 2);
-            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-            const dist = R * c;
+            const dist = calculateDistance(lat1, lng1, lat2, lng2);
 
             // Punto medio
             const midLat = (lat1 + lat2) / 2;
@@ -2262,8 +2438,58 @@ pzo: L.icon({
   </Document>
 </kml>`;
 
-      const filename = `ftth_map_export_${new Date().toISOString().slice(0, 10)}.kml`;
-      downloadFile(filename, kmlContent, "application/vnd.google-earth.kml+xml;charset=utf-8;");
+      if (forWhatsApp) {
+        // Para WhatsApp, crear un blob y compartirlo
+        const blob = new Blob([kmlContent], { type: 'application/vnd.google-earth.kml+xml' });
+        const url = URL.createObjectURL(blob);
+        
+        // Crear un enlace temporal para descargar el archivo
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `ftth_export_${new Date().toISOString().slice(0, 10)}.kml`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        
+        // Esperar un momento antes de abrir WhatsApp para dar tiempo a la descarga
+        setTimeout(() => {
+          const text = encodeURIComponent("Te comparto el archivo KML de la infraestructura FTTH");
+          window.open(`https://wa.me/?text=${text}`, '_blank');
+        }, 1000);
+      } else {
+        // Descarga normal
+        const filename = `ftth_map_export_${new Date().toISOString().slice(0, 10)}.kml`;
+        downloadFile(filename, kmlContent, "application/vnd.google-earth.kml+xml;charset=utf-8;");
+      }
+    }
+
+    function shareViaWhatsApp(format) {
+      if (format === "csv") {
+        const csvContent = generateCSVContent();
+        const text = encodeURIComponent("Datos FTTH-SV-RT:\n" + csvContent);
+        window.open(`https://wa.me/?text=${text}`, '_blank');
+      } else if (format === "kml") {
+        // Para KML, necesitamos crear un archivo temporal
+        exportToKML(true);
+      }
+    }
+
+    function generateCSVContent() {
+      let csvContent = "ID,Tipo,Etiqueta,Latitud,Longitud,Distancia,Descripción,Foto\n";
+      assets.forEach((asset) => {
+        const row = [
+          asset.id,
+          asset.type,
+          `"${asset.label || ""}"`,
+          asset.lat || "",
+          asset.lng || "",
+          asset.distance || "",
+          `"${(asset.props && asset.props.description) || ""}"`,
+          asset.photo ? "Sí" : "No"
+        ].join(",");
+        csvContent += row + "\n";
+      });
+      return csvContent;
     }
 
     function importCSV(content) {
@@ -2506,6 +2732,13 @@ pzo: L.icon({
         }
       });
 
+      // Agregar foto
+      document.getElementById("add-photo-btn").addEventListener("click", function() {
+        if (selectedAssetId) {
+          openPhotoModal(selectedAssetId);
+        }
+      });
+
       // Agregar punto manual con coordenadas
       document.getElementById("add-manual-point").addEventListener("click", function() {
         const lat = parseFloat(document.getElementById("manual-lat").value);
@@ -2552,6 +2785,9 @@ pzo: L.icon({
           if (action === "save" && selectedExportFormat) {
             exportData(selectedExportFormat);
             closeExportModal();
+          } else if (action === "whatsapp" && selectedExportFormat) {
+            shareViaWhatsApp(selectedExportFormat);
+            closeExportModal();
           } else {
             alert("Función de compartir no implementada aún");
           }
@@ -2560,7 +2796,17 @@ pzo: L.icon({
 
       document.getElementById("import-data").addEventListener("change", function(e) {
         if (this.files.length > 0) {
-          importData(this.files[0]);
+          const file = this.files[0];
+          const reader = new FileReader();
+          reader.onload = function(e) {
+            const content = e.target.result;
+            if (file.name.endsWith('.csv')) {
+              importCSV(content);
+            } else if (file.name.endsWith('.kml')) {
+              importKML(content);
+            }
+          };
+          reader.readAsText(file);
           this.value = ""; // Reset input
         }
       });
@@ -2578,6 +2824,18 @@ pzo: L.icon({
       document.getElementById("nap-cancel").addEventListener("click", closeNapModal);
       document.getElementById("nap-confirm").addEventListener("click", saveNap);
 
+      // Photo Modal
+      document.getElementById("camera-input").addEventListener("change", function(e) {
+        handlePhotoUpload(e, true);
+      });
+      
+      document.getElementById("gallery-input").addEventListener("change", function(e) {
+        handlePhotoUpload(e, false);
+      });
+      
+      document.getElementById("photo-cancel").addEventListener("click", closePhotoModal);
+      document.getElementById("photo-confirm").addEventListener("click", savePhoto);
+
       // Toggle sidebar
       document.getElementById("toggle-sidebar").addEventListener("click", function() {
         document.getElementById("sidebar").classList.toggle("hidden");
@@ -2590,7 +2848,6 @@ pzo: L.icon({
   </script>
 </body>
 </html>
-
 
 
 
