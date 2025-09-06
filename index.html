@@ -750,6 +750,92 @@
       top: 14px;
     }
 
+    /* Puntero estático en el centro del mapa */
+    .static-crosshair {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 40px;
+      height: 40px;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      z-index: 1000;
+      display: none;
+    }
+
+    .static-crosshair::before,
+    .static-crosshair::after {
+      content: '';
+      position: absolute;
+      background-color: #ff0000;
+    }
+
+    .static-crosshair::before {
+      width: 2px;
+      height: 40px;
+      left: 19px;
+      top: 0;
+    }
+
+    .static-crosshair::after {
+      width: 40px;
+      height: 2px;
+      left: 0;
+      top: 19px;
+    }
+
+    .static-crosshair .center-dot {
+      position: absolute;
+      width: 6px;
+      height: 6px;
+      background-color: #ff0000;
+      border-radius: 50%;
+      top: 17px;
+      left: 17px;
+    }
+
+    /* Botón para agregar en posición del puntero */
+    .add-at-pointer-btn {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      background-color: var(--success);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 15px;
+      cursor: pointer;
+      display: none;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    }
+
+    /* Opciones de tipo de instalación de cable */
+    .cable-installation-options {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .cable-installation-option {
+      flex: 1;
+      padding: 8px;
+      text-align: center;
+      border-radius: 8px;
+      background-color: var(--surface-light);
+      cursor: pointer;
+      transition: all 0.2s;
+      user-select: none;
+    }
+
+    .cable-installation-option.selected {
+      background-color: var(--secondary);
+      color: white;
+    }
+
     /* Responsive */
     @media (max-width: 992px) {
       .main-content {
@@ -781,6 +867,11 @@
       }
       .map-control-btn span {
         display: none; /* Sólo iconos en móvil para ahorrar espacio */
+      }
+      .add-at-pointer-btn {
+        bottom: 10px;
+        padding: 8px 12px;
+        font-size: 12px;
       }
     }
 
@@ -860,6 +951,16 @@
     <div class="main-content">
       <div class="map-container">
         <div id="map"></div>
+        
+        <!-- Puntero estático en el centro -->
+        <div class="static-crosshair" id="static-crosshair">
+          <div class="center-dot"></div>
+        </div>
+
+        <!-- Botón para agregar en posición del puntero -->
+        <button class="add-at-pointer-btn" id="add-at-pointer-btn">
+          <i class="fas fa-plus-circle"></i> Agregar aquí
+        </button>
 
         <div class="map-controls" id="map-controls">
           <button class="map-control-btn" id="locate-me-btn" title="Centrar en mi ubicación">
@@ -918,6 +1019,13 @@
             <div class="cable-option selected" data-type="fo">FO</div>
             <div class="cable-option" data-type="drop">DROP</div>
           </div>
+
+          <!-- Opciones de tipo de instalación -->
+          <div class="cable-installation-options">
+            <div class="cable-installation-option selected" data-installation="aerial">Aéreo</div>
+            <div class="cable-installation-option" data-installation="duct">Ducto</div>
+          </div>
+
           <div class="distance-display" id="cable-distance">Distancia: 0.00 metros</div>
           <div class="distance-display" id="segment-distance">Último segmento: 0.00 metros</div>
 
@@ -1176,6 +1284,7 @@
     let standardTileLayer, satelliteTileLayer, googleEarthTileLayer;
 
     let currentCableType = "fo";
+    let currentCableInstallation = "aerial"; // 'aerial' o 'duct'
     let cablePoints = [];
     let drawingCable = false;
     let tempMarkers = [];
@@ -1197,6 +1306,23 @@
     let currentPhotoData = null;
     let currentAssetForPhoto = null;
 
+    // Variable para controlar la visibilidad del puntero estático
+    let staticCrosshairVisible = false;
+
+    // Contadores para numeración automática
+    const assetCounters = {
+      pole: 0,
+      nap: 0,
+      fat: 0,
+      olt: 0,
+      c12: 0,
+      emp: 0,
+      pzo: 0,
+      ont: 0,
+      odf: 0,
+      box: 0
+    };
+
     // Íconos personalizados por tipo
     const ICONS = {
       pole: L.icon({
@@ -1210,77 +1336,87 @@
         shadowSize: [41, 41],
       }),
 
-       nap: L.icon({
-    iconUrl: "nap.png",
-    shadowUrl: "icons/shadow.png",
-    iconSize: [32, 32],
-    iconAnchor: [16, 32],
-    popupAnchor: [0, -28],
-  }),
-  fat: L.icon({
-    iconUrl: "fat.png",
-    shadowUrl: "icons/shadow.png",
-    iconSize: [32, 32],
-    iconAnchor: [16, 32],
-    popupAnchor: [0, -28],
-  }),
-  olt: L.icon({
-    iconUrl: "olt.png",
-    shadowUrl: "icons/shadow.png",
-    iconSize: [32, 32],
-    iconAnchor: [16, 32],
-    popupAnchor: [0, -28],
-  }),
-  c12: L.icon({
-    iconUrl: "c12.png",
-    shadowUrl: "icons/shadow.png",
-    iconSize: [32, 32],
-    iconAnchor: [16, 32],
-    popupAnchor: [0, -28],
-  }),
-emp: L.icon({
-    iconUrl: "empalme.png",
-    shadowUrl: "icons/shadow.png",
-    iconSize: [32, 32],
-    iconAnchor: [16, 32],
-    popupAnchor: [0, -28],
-  }),
-pzo: L.icon({
-    iconUrl: "pozo.png",
-    shadowUrl: "icons/shadow.png",
-    iconSize: [32, 32],
-    iconAnchor: [16, 32],
-    popupAnchor: [0, -28],
-  }),
-  default: L.icon({
-    iconUrl: "icons/default.png",
-    shadowUrl: "icons/shadow.png",
-    iconSize: [32, 32],
-    iconAnchor: [16, 32],
-    popupAnchor: [0, -28],
-  }),
+      nap: L.icon({
+        iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-blue.png",
+        shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34],
+        shadowSize: [41, 41],
+      }),
+      fat: L.icon({
+        iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png",
+        shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34],
+        shadowSize: [41, 41],
+      }),
+      olt: L.icon({
+        iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png",
+        shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34],
+        shadowSize: [41, 41],
+      }),
+      c12: L.icon({
+        iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-orange.png",
+        shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34],
+        shadowSize: [41, 41],
+      }),
+      emp: L.icon({
+        iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-yellow.png",
+        shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34],
+        shadowSize: [41, 41],
+      }),
+      pzo: L.icon({
+        iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-violet.png",
+        shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34],
+        shadowSize: [41, 41],
+      }),
+      default: L.icon({
+        iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-grey.png",
+        shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34],
+        shadowSize: [41, 41],
+      }),
       ont: L.icon({
-    iconUrl: "ont.png",
-    shadowUrl: "icons/shadow.png",
-    iconSize: [32, 32],
-    iconAnchor: [16, 32],
-    popupAnchor: [0, -28],
-  }),
-    odf: L.icon({
-    iconUrl: "odf.png",
-    shadowUrl: "icons/shadow.png",
-    iconSize: [32, 32],
-    iconAnchor: [16, 32],
-    popupAnchor: [0, -28],
-    }),
-    box: L.icon({
-    iconUrl: "box.png",
-    shadowUrl: "icons/shadow.png",
-    iconSize: [32, 32],
-    iconAnchor: [16, 32],
-    popupAnchor: [0, -28],
-   }),
-  };
+        iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-gold.png",
+        shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34],
+        shadowSize: [41, 41],
+      }),
+      odf: L.icon({
+        iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-black.png",
+        shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34],
+        shadowSize: [41, 41],
+      }),
+      box: L.icon({
+        iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-grey.png",
+        shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34],
+        shadowSize: [41, 41],
+      }),
+    };
 
 
     // =========================
@@ -1412,6 +1548,48 @@ pzo: L.icon({
     }
 
     // =========================
+    // Funciones para el puntero estático
+    // =========================
+    function updateStaticCrosshair() {
+      const assetType = document.getElementById("asset-type-selector").value;
+      const staticCrosshair = document.getElementById("static-crosshair");
+      const addAtPointerBtn = document.getElementById("add-at-pointer-btn");
+      
+      // Mostrar puntero estático cuando:
+      // 1. Se selecciona un tipo de activo (excepto cable)
+      // 2. Se está dibujando un cable
+      if (assetType !== "cab" || drawingCable) {
+        staticCrosshair.style.display = "block";
+        addAtPointerBtn.style.display = "flex";
+        staticCrosshairVisible = true;
+      } else {
+        staticCrosshair.style.display = "none";
+        addAtPointerBtn.style.display = "none";
+        staticCrosshairVisible = false;
+      }
+    }
+
+    // Función para agregar activo en la posición del puntero
+    function addAssetAtPointer() {
+      if (!staticCrosshairVisible) return;
+      
+      // Obtener el centro del mapa (donde está el puntero)
+      const center = map.getCenter();
+      const type = document.getElementById("asset-type-selector").value;
+      
+      if (type === "cab") {
+        if (!drawingCable) {
+          startCableDrawing();
+        }
+        addCablePoint(center);
+      } else if (type === "nap") {
+        openNapModal(center);
+      } else {
+        addAsset(center.lat, center.lng);
+      }
+    }
+
+    // =========================
     // Persistencia
     // =========================
     function saveData() {
@@ -1428,11 +1606,13 @@ pzo: L.icon({
       });
       
       localStorage.setItem("ftth_sv_rt_assets", JSON.stringify(assetsToSave));
+      localStorage.setItem("ftth_sv_rt_asset_counters", JSON.stringify(assetCounters));
     }
 
     function loadSavedData() {
       const savedAssets = localStorage.getItem("ftth_sv_rt_assets");
       const savedMapType = localStorage.getItem("ftth_sv_rt_map_type");
+      const savedCounters = localStorage.getItem("ftth_sv_rt_asset_counters");
 
       if (savedAssets) {
         assets = JSON.parse(savedAssets);
@@ -1460,6 +1640,15 @@ pzo: L.icon({
         calculateCableTotals();
       }
 
+      if (savedCounters) {
+        const counters = JSON.parse(savedCounters);
+        Object.keys(counters).forEach(key => {
+          if (assetCounters.hasOwnProperty(key)) {
+            assetCounters[key] = counters[key];
+          }
+        });
+      }
+
       if (savedMapType) switchMapType(savedMapType);
     }
 
@@ -1469,8 +1658,13 @@ pzo: L.icon({
     function addAsset(lat, lng, label, type, photo, description) {
       const assetType = type || document.getElementById("asset-type-selector").value;
       
+      // Si no es cable, generar numeración automática
+      if (assetType !== "cab") {
+        assetCounters[assetType] = (assetCounters[assetType] || 0) + 1;
+      }
+      
       const id = generateId();
-      const assetLabel = label || `${assetType.toUpperCase()}_${id.substring(0, 4)}`;
+      const assetLabel = label || `${assetType.toUpperCase()}_${assetCounters[assetType]}`;
 
       const asset = {
         id,
@@ -1871,6 +2065,9 @@ pzo: L.icon({
       document.getElementById("drawing-status").style.display = "block";
       document.getElementById("undo-cable-point").disabled = true;
       document.getElementById("finish-cable-drawing").disabled = true;
+      
+      // Actualizar puntero estático
+      updateStaticCrosshair();
     }
 
     function addCablePoint(latlng) {
@@ -1889,10 +2086,12 @@ pzo: L.icon({
 
       // línea temporal
       if (cablePoints.length > 1) {
+        const dashArray = currentCableInstallation === "aerial" ? "10, 10" : null;
+        
         const pl = L.polyline(cablePoints, {
           color: currentCableType === "fo" ? "#3b82f6" : "#f59e0b",
           weight: 3,
-          dashArray: "5, 10",
+          dashArray: dashArray,
         }).addTo(map);
         tempPolylines.push(pl);
 
@@ -1949,10 +2148,12 @@ pzo: L.icon({
       
       // Redibujar polyline si aún quedan puntos
       if (cablePoints.length > 1) {
+        const dashArray = currentCableInstallation === "aerial" ? "10, 10" : null;
+        
         const pl = L.polyline(cablePoints, {
           color: currentCableType === "fo" ? "#3b82f6" : "#f59e0b",
           weight: 3,
-          dashArray: "5, 10",
+          dashArray: dashArray,
         }).addTo(map);
         tempPolylines.push(pl);
         
@@ -2007,6 +2208,9 @@ pzo: L.icon({
       // Restablecer displays de distancia
       updateDistanceDisplay(0);
       document.getElementById("segment-distance").textContent = "Último segmento: 0.00 metros";
+      
+      // Actualizar puntero estático
+      updateStaticCrosshair();
     }
 
     function finishCableDrawing() {
@@ -2022,6 +2226,7 @@ pzo: L.icon({
         id,
         type: "cab",
         cableType: currentCableType,
+        installationType: currentCableInstallation,
         label: `CAB_${id.substring(0, 4)}`,
         points: cablePoints.map((p) => [Number(p.lat.toFixed(6)), Number(p.lng.toFixed(6))]),
         distance: totalDistance,
@@ -2053,23 +2258,32 @@ pzo: L.icon({
       calculateCableTotals();
       saveData();
       selectAsset(id);
+      
+      // Actualizar puntero estático
+      updateStaticCrosshair();
     }
 
     function addCableToMap(asset) {
       if (polylines[asset.id]) map.removeLayer(polylines[asset.id]);
 
+      const dashArray = asset.installationType === "aerial" ? "10, 10" : null;
+      
       const poly = L.polyline(asset.points, {
         color: asset.cableType === "fo" ? "#3b82f6" : "#f59e0b",
         weight: 4,
+        dashArray: dashArray,
       }).addTo(map);
 
       poly.on("click", () => selectAsset(asset.id));
 
       const distance = asset.distance || 0;
+      const installationType = asset.installationType === "aerial" ? "Aéreo" : "Ducto";
+      
       poly.bindPopup(`
         <div class="popup-content">
           <div class="popup-title">${asset.label}</div>
           <div class="popup-coords">${distance.toFixed(2)} metros</div>
+          <div class="popup-coords">Tipo: ${installationType}</div>
           <div class="popup-actions">
             <button class="popup-btn" onclick="selectAsset('${asset.id}')">Editar</button>
             <button class="popup-btn" onclick="deleteAsset('${asset.id}')">Eliminar</button>
@@ -2292,9 +2506,10 @@ pzo: L.icon({
     }
 
     function exportToCSV() {
-      let csvContent = "ID,Tipo,Etiqueta,Latitud,Longitud,Distancia,Descripción,Foto\n";
+      let csvContent = "ID,Tipo,Etiqueta,Latitud,Longitud,Distancia,Instalación,Descripción,Foto\n";
 
       assets.forEach((asset) => {
+        const installationType = asset.installationType === "aerial" ? "Aéreo" : (asset.installationType === "duct" ? "Ducto" : "N/A");
         const row = [
           asset.id,
           asset.type,
@@ -2302,6 +2517,7 @@ pzo: L.icon({
           asset.lat || "",
           asset.lng || "",
           asset.distance || "",
+          installationType,
           `"${(asset.props && asset.props.description) || ""}"`,
           asset.photo ? "Sí" : "No"
         ].join(",");
@@ -2379,16 +2595,18 @@ pzo: L.icon({
         .filter(asset => asset.type === "cab")
         .forEach(asset => {
           const color = asset.cableType === "fo" ? "ff0000ff" : "ff00aaff"; // Azul FO, cian DROP
+          const dashStyle = asset.installationType === "aerial" ? '          <gx:physicalWidth>2</gx:physicalWidth>' : '';
 
           // Cable completo
           kmlContent += `
     <Placemark>
       <name>${escapeXML(asset.label)} (${asset.distance.toFixed(2)} m)</name>
-      <description>${asset.distance.toFixed(2)} metros - Tipo: ${asset.cableType}</description>
+      <description>${asset.distance.toFixed(2)} metros - Tipo: ${asset.cableType} - Instalación: ${asset.installationType === "aerial" ? "Aéreo" : "Ducto"}</description>
       <Style>
         <LineStyle>
           <color>${color}</color>
           <width>4</width>
+          ${asset.installationType === "aerial" ? '<gx:physicalWidth>2</gx:physicalWidth>' : ''}
         </LineStyle>
       </Style>
       <LineString>
@@ -2469,8 +2687,9 @@ pzo: L.icon({
     }
 
     function generateCSVContent() {
-      let csvContent = "ID,Tipo,Etiqueta,Latitud,Longitud,Distancia,Descripción,Foto\n";
+      let csvContent = "ID,Tipo,Etiqueta,Latitud,Longitud,Distancia,Instalación,Descripción,Foto\n";
       assets.forEach((asset) => {
+        const installationType = asset.installationType === "aerial" ? "Aéreo" : (asset.installationType === "duct" ? "Ducto" : "N/A");
         const row = [
           asset.id,
           asset.type,
@@ -2478,6 +2697,7 @@ pzo: L.icon({
           asset.lat || "",
           asset.lng || "",
           asset.distance || "",
+          installationType,
           `"${(asset.props && asset.props.description) || ""}"`,
           asset.photo ? "Sí" : "No"
         ].join(",");
@@ -2532,6 +2752,11 @@ pzo: L.icon({
       assets = [];
       selectedAssetId = null;
 
+      // Reiniciar contadores
+      Object.keys(assetCounters).forEach(key => {
+        assetCounters[key] = 0;
+      });
+
       // Actualizar UI
       renderAssetsList();
       updateStats();
@@ -2541,10 +2766,16 @@ pzo: L.icon({
 
       // Limpiar localStorage
       localStorage.removeItem("ftth_sv_rt_assets");
+      localStorage.removeItem("ftth_sv_rt_asset_counters");
 
       // Restablecer panel de edición
       document.getElementById("editor-panel").style.display = "none";
       document.getElementById("no-selection-message").style.display = "block";
+      
+      // Ocultar puntero estático
+      document.getElementById("static-crosshair").style.display = "none";
+      document.getElementById("add-at-pointer-btn").style.display = "none";
+      staticCrosshairVisible = false;
     }
 
     function getCurrentLocation(highAccuracy) {
@@ -2655,6 +2886,9 @@ pzo: L.icon({
       document.getElementById("satellite-map-btn").addEventListener("click", () => switchMapType("satellite"));
       document.getElementById("googleearth-map-btn").addEventListener("click", () => switchMapType("googleearth"));
 
+      // Selector de tipo de activo - actualizar puntero estático cuando cambie
+      document.getElementById("asset-type-selector").addEventListener("change", updateStaticCrosshair);
+
       // Selector de tipo de cable
       document.querySelectorAll(".cable-option").forEach(option => {
         option.addEventListener("click", function() {
@@ -2663,6 +2897,18 @@ pzo: L.icon({
           currentCableType = this.getAttribute("data-type");
         });
       });
+
+      // Selector de tipo de instalación de cable
+      document.querySelectorAll(".cable-installation-option").forEach(option => {
+        option.addEventListener("click", function() {
+          document.querySelectorAll(".cable-installation-option").forEach(opt => opt.classList.remove("selected"));
+          this.classList.add("selected");
+          currentCableInstallation = this.getAttribute("data-installation");
+        });
+      });
+
+      // Botón para agregar en posición del puntero
+      document.getElementById("add-at-pointer-btn").addEventListener("click", addAssetAtPointer);
 
       // Botones de control del mapa
       document.getElementById("locate-me-btn").addEventListener("click", function() {
@@ -2838,11 +3084,13 @@ pzo: L.icon({
       // Inicializar estadísticas
       updateStats();
       calculateCableTotals();
+      
+      // Inicializar puntero estático
+      updateStaticCrosshair();
     });
   </script>
 </body>
 </html>
-
 
 
 
