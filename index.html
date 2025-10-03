@@ -2737,15 +2737,316 @@ pzo: L.icon({
       return csvContent;
     }
 
-    function importCSV(content) {
-      // Implementar lógica de importación CSV
-      alert('Importación CSV aún no implementada');
+     function importCSV(content) {
+    try {
+        const lines = content.split('\n').filter(line => line.trim() !== '');
+        if (lines.length < 2) {
+            alert('El archivo CSV está vacío o no tiene datos válidos');
+            return;
+        }
+
+        // Obtener headers
+        const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
+        
+        // Validar headers básicos
+        const requiredHeaders = ['Tipo', 'Latitud', 'Longitud'];
+        const missingHeaders = requiredHeaders.filter(h => !headers.includes(h));
+        if (missingHeaders.length > 0) {
+            alert(`Faltan headers requeridos: ${missingHeaders.join(', ')}`);
+            return;
+        }
+
+        let importedCount = 0;
+        let errorCount = 0;
+
+        // Procesar cada línea
+        for (let i = 1; i < lines.length; i++) {
+            try {
+                const line = lines[i];
+                const values = parseCSVLine(line);
+                
+                if (values.length < headers.length) continue;
+
+                const row = {};
+                headers.forEach((header, index) => {
+                    row[header] = values[index] ? values[index].trim().replace(/"/g, '') : '';
+                });
+
+                // Validar datos mínimos
+                const type = row['Tipo'];
+                const lat = parseFloat(row['Latitud']);
+                const lng = parseFloat(row['Longitud']);
+
+                if (!type || isNaN(lat) || isNaN(lng)) {
+                    errorCount++;
+                    console.warn(`Línea ${i + 1}: Datos inválidos`, row);
+                    continue;
+                }
+
+                // Preparar propiedades
+                const props = {};
+                if (row['Descripción']) {
+                    props.description = row['Descripción'];
+                }
+
+                let photo = null;
+                if (row['Foto'] && row['Foto'].toLowerCase() === 'sí') {
+                    // Para fotos, necesitaríamos manejar archivos separados
+                    console.log(`Línea ${i + 1}: Asset con foto - manejar separadamente`);
+                }
+
+                // Determinar cableType si es un cable
+                let cableType = null;
+                let installationType = null;
+                let points = null;
+                let distance = 0;
+
+                if (type === 'cab') {
+                    cableType = row['CableType'] || 'fo';
+                    installationType = row['Instalación'] === 'Ducto' ? 'duct' : 'aerial';
+                    
+                    // Para cables, necesitamos manejar puntos específicos
+                    if (row['Puntos']) {
+                        try {
+                            points = JSON.parse(row['Puntos']);
+                        } catch (e) {
+                            console.warn(`Línea ${i + 1}: Error parsing puntos`, e);
+                        }
+                    }
+                    
+                    distance = parseFloat(row['Distancia']) || 0;
+                }
+
+                // Crear el asset
+                if (type === 'cab' && points && points.length > 1) {
+                    // Es un cable con puntos definidos
+                    const asset = {
+                        id: row['ID'] || generateId(),
+                        type: 'cab',
+                        cableType: cableType,
+                        installationType: installationType,
+                        label: row['Etiqueta'] || `CAB_${generateId().substring(0, 4)}`,
+                        points: points,
+                        distance: distance,
+                        props: props
+                    };
+                    assets.push(asset);
+                    addCableToMap(asset);
+                } else {
+                    // Es un activo normal
+                    addAsset(lat, lng, row['Etiqueta'], type, photo, row['Descripción']);
+                }
+
+                importedCount++;
+
+            } catch (error) {
+                errorCount++;
+                console.error(`Error en línea ${i + 1}:`, error);
+            }
+        }
+
+        // Actualizar UI
+        renderAssetsList();
+        updateStats();
+        calculateCableTotals();
+        saveData();
+
+        alert(`Importación completada:\n✅ ${importedCount} activos importados\n❌ ${errorCount} errores`);
+
+    } catch (error) {
+        console.error('Error en importación CSV:', error);
+        alert('Error al importar el archivo CSV: ' + error.message);
     }
+}
+
+// Función auxiliar para parsear líneas CSV correctamente
+function parseCSVLine(line) {
+    const result = [];
+    let current = '';
+    let inQuotes = false;
+    
+    for (let i = 0; i < line.length; i++) {
+        const char = line[i];
+        
+        if (char === '"') {
+            inQuotes = !inQuotes;
+        } else if (char === ',' && !inQuotes) {
+            result.push(current);
+            current = '';
+        } else {
+            current += char;
+        }
+    }
+    
+    result.push(current);
+    return result;
+}
 
     function importKML(content) {
-      // Implementar lógica de importación KML
-      alert('Importación KML aún no implementada');
+    try {
+        const parser = new DOMParser();
+        const xmlDoc = parser.parseFromString(content, 'text/xml');
+        
+        // Verificar errores de parsing
+        const parseError = xmlDoc.getElementsByTagName('parsererror');
+        if (parseError.length > 0) {
+            throw new Error('El archivo KML no es válido');
+        }
+
+        const placemarks = xmlDoc.getElementsByTagName('Placemark');
+        let importedCount = 0;
+        let errorCount = 0;
+
+        for (let placemark of placemarks) {
+            try {
+                // Obtener nombre
+                const nameElement = placemark.getElementsByTagName('name')[0];
+                const name = nameElement ? nameElement.textContent.trim() : '';
+
+                // Obtener descripción
+                const descriptionElement = placemark.getElementsByTagName('description')[0];
+                let description = '';
+                if (descriptionElement) {
+                    // Extraer texto limpio de la descripción (sin HTML)
+                    const tempDiv = document.createElement('div');
+                    tempDiv.innerHTML = descriptionElement.textContent;
+                    description = tempDiv.textContent || tempDiv.innerText || '';
+                }
+
+                // Determinar tipo por el nombre o descripción
+                let type = determineAssetType(name, description);
+                
+                // Buscar coordenadas
+                const coordinates = getCoordinatesFromPlacemark(placemark);
+                
+                if (!coordinates) {
+                    errorCount++;
+                    continue;
+                }
+
+                // Crear asset basado en el tipo de geometría
+                if (coordinates.points && coordinates.points.length > 1) {
+                    // Es una línea (cable)
+                    const asset = {
+                        id: generateId(),
+                        type: 'cab',
+                        cableType: 'fo', // Por defecto
+                        installationType: 'aerial', // Por defecto
+                        label: name || `CAB_${generateId().substring(0, 4)}`,
+                        points: coordinates.points,
+                        distance: calculateTotalDistance(coordinates.points),
+                        props: { description: description }
+                    };
+                    assets.push(asset);
+                    addCableToMap(asset);
+                } else if (coordinates.point) {
+                    // Es un punto (activo normal)
+                    addAsset(
+                        coordinates.point.lat, 
+                        coordinates.point.lng, 
+                        name, 
+                        type, 
+                        null, 
+                        description
+                    );
+                }
+
+                importedCount++;
+
+            } catch (error) {
+                errorCount++;
+                console.error('Error procesando placemark:', error);
+            }
+        }
+
+        // Actualizar UI
+        renderAssetsList();
+        updateStats();
+        calculateCableTotals();
+        saveData();
+
+        alert(`Importación KML completada:\n✅ ${importedCount} elementos importados\n❌ ${errorCount} errores`);
+
+    } catch (error) {
+        console.error('Error en importación KML:', error);
+        alert('Error al importar el archivo KML: ' + error.message);
     }
+}
+
+// Función auxiliar para determinar el tipo de asset
+function determineAssetType(name, description) {
+    const lowerName = name.toLowerCase();
+    const lowerDesc = description.toLowerCase();
+
+    const typePatterns = {
+        'poste': ['poste', 'pole', 'post'],
+        'nap': ['nap', 'punto de acceso'],
+        'fat': ['fat', 'flex point'],
+        'olt': ['olt'],
+        'n1': ['n1', 'n-1', 'bal'],
+        'emp': ['emp', 'empalme'],
+        'pzo': ['pzo', 'pozo'],
+        'ont': ['ont'],
+        'odf': ['odf'],
+        'box': ['box', 'hubbox', 'caja']
+    };
+
+    for (const [type, patterns] of Object.entries(typePatterns)) {
+        for (const pattern of patterns) {
+            if (lowerName.includes(pattern) || lowerDesc.includes(pattern)) {
+                return type;
+            }
+        }
+    }
+
+    return 'poste'; // Tipo por defecto
+}
+
+// Función auxiliar para extraer coordenadas de un placemark
+function getCoordinatesFromPlacemark(placemark) {
+    // Buscar Point
+    const pointElement = placemark.getElementsByTagName('Point')[0];
+    if (pointElement) {
+        const coordElement = pointElement.getElementsByTagName('coordinates')[0];
+        if (coordElement) {
+            const coords = coordElement.textContent.trim().split(',');
+            if (coords.length >= 2) {
+                return {
+                    point: {
+                        lng: parseFloat(coords[0]),
+                        lat: parseFloat(coords[1])
+                    }
+                };
+            }
+        }
+    }
+
+    // Buscar LineString
+    const lineStringElement = placemark.getElementsByTagName('LineString')[0];
+    if (lineStringElement) {
+        const coordElement = lineStringElement.getElementsByTagName('coordinates')[0];
+        if (coordElement) {
+            const points = [];
+            const coordLines = coordElement.textContent.trim().split(' ');
+            
+            for (const coordLine of coordLines) {
+                const coords = coordLine.split(',');
+                if (coords.length >= 2) {
+                    points.push([
+                        parseFloat(coords[1]), // lat
+                        parseFloat(coords[0])  // lng
+                    ]);
+                }
+            }
+            
+            if (points.length > 1) {
+                return { points: points };
+            }
+        }
+    }
+
+    return null;
+}
 
     // =========================
     // Clear All Data - CORREGIDO
@@ -3126,6 +3427,7 @@ pzo: L.icon({
   </script>
 </body>
 </html>
+
 
 
 
