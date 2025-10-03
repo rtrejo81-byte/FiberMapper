@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
-  <title>FTTH-SV-RT - Sistema de Mapeo</title>
+  <title>Fiber Mapper - Sistema de Mapeo FTTX</title>
 
   <!-- Leaflet -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -916,13 +916,13 @@
         </div>
 
         <select id="asset-type-selector" title="Tipo de activo para clic en mapa">
-          <option value="pole">POSTE</option>
+          <option value="poste">POSTE</option>
           <option value="nap">NAP</option>
           <option value="cab">Cable FO</option>
           <option value="fat">FAT</option>
           <option value="olt">OLT</option>
-          <option value="c12">C-12</option>
-          <option value="emp">EMPALME</option>
+          <option value="n1">N1 BAL</option>
+          <option value="emp">EMP</option>
           <option value="pzo">POZO</option>
           <option value="ont">ONT</option>
           <option value="odf">ODF</option>
@@ -1131,7 +1131,7 @@
         </div>
 
         <div class="copyright">
-          &copy; 2025 FTTH-SV-RT - Todos los derechos reservados para Roberto Trejo
+          &copy; 2025 Fiber Mapper - Todos los derechos reservados para Roberto Trejo
         </div>
       </aside>
     </div>
@@ -1179,11 +1179,11 @@
         <div class="gps-row">
           <label>Tipo</label>
           <select id="gps-type">
-            <option value="pole">POSTE</option>
+            <option value="poste">POSTE</option>
             <option value="nap">NAP</option>
             <option value="fat">FAT</option>
             <option value="olt">OLT</option>
-            <option value="c12">C-12</option>
+            <option value="n1">N1 BAL</option>
             <option value="emp">EMPALME</option>
             <option value="pzo">POZO</option>
             <option value="ont">ONT</option>
@@ -1311,11 +1311,11 @@
 
     // Contadores para numeración automática
     const assetCounters = {
-      pole: 0,
+      pooste: 0,
       nap: 0,
       fat: 0,
       olt: 0,
-      c12: 0,
+      n1: 0,
       emp: 0,
       pzo: 0,
       ont: 0,
@@ -1325,7 +1325,7 @@
 
     // Íconos personalizados por tipo
     const ICONS = {
-      pole: L.icon({
+      poste: L.icon({
         iconUrl:
           "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-grey.png",
         shadowUrl:
@@ -1357,7 +1357,7 @@
     iconAnchor: [16, 32],
     popupAnchor: [0, -28],
   }),
-  c12: L.icon({
+  n1: L.icon({
     iconUrl: "c12.png",
     shadowUrl: "icons/shadow.png",
     iconSize: [32, 32],
@@ -1596,14 +1596,14 @@ pzo: L.icon({
         return asset;
       });
       
-      localStorage.setItem("ftth_sv_rt_assets", JSON.stringify(assetsToSave));
-      localStorage.setItem("ftth_sv_rt_asset_counters", JSON.stringify(assetCounters));
+      localStorage.setItem("fibermapper_assets", JSON.stringify(assetsToSave));
+      localStorage.setItem("fibermapper_asset_counters", JSON.stringify(assetCounters));
     }
 
     function loadSavedData() {
-      const savedAssets = localStorage.getItem("ftth_sv_rt_assets");
-      const savedMapType = localStorage.getItem("ftth_sv_rt_map_type");
-      const savedCounters = localStorage.getItem("ftth_sv_rt_asset_counters");
+      const savedAssets = localStorage.getItem("fibermapper_assets");
+      const savedMapType = localStorage.getItem("fibermapper_map_type");
+      const savedCounters = localStorage.getItem("fibermapper_asset_counters");
 
       if (savedAssets) {
         assets = JSON.parse(savedAssets);
@@ -2528,10 +2528,10 @@ pzo: L.icon({
 
       // Mapeo de iconos según tipo de activo
       const iconMap = {
-        pole: "http://maps.google.com/mapfiles/kml/paddle/P.png",
+        poste: "http://maps.google.com/mapfiles/kml/paddle/P.png",
         nap: "http://maps.google.com/mapfiles/kml/paddle/N.png",
         fat: "http://maps.google.com/mapfiles/kml/paddle/F.png",
-        c12: "http://maps.google.com/mapfiles/kml/paddle/C.png",
+        n1: "http://maps.google.com/mapfiles/kml/paddle/C.png",
         ont: "http://maps.google.com/mapfiles/kml/paddle/C.png",
         odf: "http://maps.google.com/mapfiles/kml/paddle/O.png",
         box: "http://maps.google.com/mapfiles/kml/paddle/B.png"
@@ -3082,6 +3082,7 @@ pzo: L.icon({
   </script>
 </body>
 </html>
+
 
 
 
