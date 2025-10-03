@@ -217,6 +217,11 @@
       background-color: #475569;
     }
 
+    .map-control-btn.active {
+      background-color: var(--success);
+      color: white;
+    }
+
     .sidebar {
       width: 380px;
       background-color: var(--surface);
@@ -919,14 +924,14 @@
           <option value="poste">POSTE</option>
           <option value="nap">NAP</option>
           <option value="cab">Cable FO</option>
-          <option value="fat">FAT</option>
+          <option value="fat">NAP DES</option>
           <option value="olt">OLT</option>
-          <option value="n1">N1 BAL</option>
+          <option value="fdh">FDH</option>
           <option value="emp">EMP</option>
           <option value="pzo">POZO</option>
           <option value="ont">ONT</option>
           <option value="odf">ODF</option>
-          <option value="box">HUBBOX</option>
+          <option value="box">FDH BOX</option>
         </select>
 
         <button id="add-gps-btn" title="Agregar activo con GPS">
@@ -1089,16 +1094,17 @@
 
               <span class="editor-label">Tipo:</span>
               <select id="editor-type">
-                <option value="pole">POSTE</option>
+                <option value="poste">POSTE</option>
                 <option value="nap">NAP</option>
                 <option value="cab">Cable FO</option>
-                <option value="fat">FAT</option>
+                <option value="fat">NAP DES</option>
                 <option value="olt">OLT</option>
-                <option value="c12">C-12</option>
-                <option value="emp">EMPALME</option>
+                <option value="fdh">FDH</option>
+                <option value="emp">EMP</option>
+                <option value="pzo">POZO</option>
                 <option value="ont">ONT</option>
                 <option value="odf">ODF</option>
-                <option value="box">HUBBOX</option>
+                <option value="box">FDH BOX</option>
               </select>
 
               <span class="editor-label">Latitud:</span>
@@ -1181,14 +1187,14 @@
           <select id="gps-type">
             <option value="poste">POSTE</option>
             <option value="nap">NAP</option>
-            <option value="fat">FAT</option>
+            <option value="fat">NAP DES</option>
             <option value="olt">OLT</option>
-            <option value="n1">N1 BAL</option>
-            <option value="emp">EMPALME</option>
+            <option value="fdh">FDH</option>
+            <option value="emp">EMP</option>
             <option value="pzo">POZO</option>
             <option value="ont">ONT</option>
             <option value="odf">ODF</option>
-            <option value="box">HUBBOX</option>
+            <option value="box">FDH BOX</option>
           </select>
         </div>
         <div class="gps-row">
@@ -1269,7 +1275,7 @@
 
   <script>
     // =========================
-    // Estado de la aplicación
+    // Estado de la aplicación - CORREGIDO
     // =========================
     let assets = [];
     let selectedAssetId = null;
@@ -1284,21 +1290,23 @@
     let standardTileLayer, satelliteTileLayer, googleEarthTileLayer;
 
     let currentCableType = "fo";
-    let currentCableInstallation = "aerial"; // 'aerial' o 'duct'
+    let currentCableInstallation = "aerial";
     let cablePoints = [];
     let drawingCable = false;
     let tempMarkers = [];
     let tempPolylines = [];
 
     let selectedExportFormat = null;
-    
+
     // Variables para el NAP
     let currentNapData = null;
     let napPhotoData = null;
-    
-    // Nuevas variables para control de ubicación
+
+    // Nuevas variables para control de ubicación - CORREGIDO
     let currentLocationMarker = null;
     let currentAccuracyCircle = null;
+    let locationWatchId = null;
+    let isTrackingLocation = false;
 
     // Variables para el puntero de precisión y fotos
     let precisionPointer = null;
@@ -1309,18 +1317,18 @@
     // Variable para controlar la visibilidad del puntero estático
     let staticCrosshairVisible = false;
 
-    // Contadores para numeración automática
+    // Contadores para numeración automática - CORREGIDO
     const assetCounters = {
-      pooste: 0,
-      nap: 0,
-      fat: 0,
-      olt: 0,
-      n1: 0,
-      emp: 0,
-      pzo: 0,
-      ont: 0,
-      odf: 0,
-      box: 0
+        poste: 0,
+        nap: 0,
+        fat: 0,
+        olt: 0,
+        fdh: 0,
+        emp: 0,
+        pzo: 0,
+        ont: 0,
+        odf: 0,
+        box: 0
     };
 
     // Íconos personalizados por tipo
@@ -1357,7 +1365,7 @@
     iconAnchor: [16, 32],
     popupAnchor: [0, -28],
   }),
-  n1: L.icon({
+  fdh: L.icon({
     iconUrl: "c12.png",
     shadowUrl: "icons/shadow.png",
     iconSize: [32, 32],
@@ -1407,8 +1415,6 @@ pzo: L.icon({
     popupAnchor: [0, -28],
    }),
   };
-
-
 
     // =========================
     // Inicialización del mapa
@@ -1581,7 +1587,7 @@ pzo: L.icon({
     }
 
     // =========================
-    // Persistencia
+    // Persistencia - CORREGIDO
     // =========================
     function saveData() {
       // Convertimos las fotos a formato almacenable
@@ -1598,6 +1604,7 @@ pzo: L.icon({
       
       localStorage.setItem("fibermapper_assets", JSON.stringify(assetsToSave));
       localStorage.setItem("fibermapper_asset_counters", JSON.stringify(assetCounters));
+      localStorage.setItem("fibermapper_map_type", currentMapType);
     }
 
     function loadSavedData() {
@@ -1926,6 +1933,136 @@ pzo: L.icon({
 
       distanceLabels.push(marker);
       if (!showLabels) map.removeLayer(marker);
+    }
+
+    // =========================
+    // Funciones de ubicación mejoradas - CORREGIDO
+    // =========================
+    function showCurrentLocation(position) {
+      const lat = position.coords.latitude;
+      const lng = position.coords.longitude;
+      const accuracy = position.coords.accuracy;
+      
+      // Eliminar marcador anterior si existe
+      if (currentLocationMarker) {
+        map.removeLayer(currentLocationMarker);
+      }
+      if (currentAccuracyCircle) {
+        map.removeLayer(currentAccuracyCircle);
+      }
+      
+      // Crear marcador de ubicación
+      currentLocationMarker = L.marker([lat, lng], {
+        icon: L.icon({
+          iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png',
+          shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+          iconSize: [25, 41],
+          iconAnchor: [12, 41],
+          popupAnchor: [1, -34],
+          shadowSize: [41, 41]
+        })
+      }).addTo(map);
+      
+      // Crear círculo de precisión
+      currentAccuracyCircle = L.circle([lat, lng], {
+        radius: accuracy,
+        color: '#00AA00',
+        fillColor: '#00AA00',
+        fillOpacity: 0.2,
+        weight: 1
+      }).addTo(map);
+      
+      // Centrar mapa en la ubicación
+      map.setView([lat, lng], 17);
+      
+      // Agregar popup informativo
+      currentLocationMarker.bindPopup(`
+        <div class="popup-content">
+          <div class="popup-title">Tu ubicación actual</div>
+          <div class="popup-coords">${lat.toFixed(6)}, ${lng.toFixed(6)}</div>
+          <div class="popup-coords">Precisión: ±${accuracy.toFixed(1)} metros</div>
+          <div class="popup-actions">
+            <button class="popup-btn" onclick="clearCurrentLocation()">Cerrar</button>
+          </div>
+        </div>
+      `).openPopup();
+    }
+    
+    function clearCurrentLocation() {
+      if (currentLocationMarker) {
+        map.removeLayer(currentLocationMarker);
+        currentLocationMarker = null;
+      }
+      if (currentAccuracyCircle) {
+        map.removeLayer(currentAccuracyCircle);
+        currentAccuracyCircle = null;
+      }
+      
+      // Detener seguimiento de ubicación si está activo
+      if (locationWatchId !== null) {
+        navigator.geolocation.clearWatch(locationWatchId);
+        locationWatchId = null;
+      }
+      
+      // Actualizar estado del botón
+      isTrackingLocation = false;
+      document.getElementById("locate-me-btn").classList.remove("active");
+    }
+
+    function toggleLocationTracking() {
+      if (!navigator.geolocation) {
+        alert("La geolocalización no es compatible con este navegador.");
+        return;
+      }
+      
+      if (isTrackingLocation) {
+        // Desactivar seguimiento
+        clearCurrentLocation();
+        isTrackingLocation = false;
+        document.getElementById("locate-me-btn").classList.remove("active");
+      } else {
+        // Activar seguimiento
+        const options = {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 0
+        };
+        
+        // Obtener ubicación actual
+        navigator.geolocation.getCurrentPosition(
+          showCurrentLocation,
+          (error) => {
+            let errorMsg = "Error al obtener la ubicación: ";
+            switch(error.code) {
+              case error.PERMISSION_DENIED:
+                errorMsg += "Permiso denegado";
+                break;
+              case error.POSITION_UNAVAILABLE:
+                errorMsg += "Posición no disponible";
+                break;
+              case error.TIMEOUT:
+                errorMsg += "Tiempo de espera agotado";
+                break;
+              default:
+                errorMsg += "Error desconocido";
+            }
+            alert(errorMsg);
+          },
+          options
+        );
+        
+        // Iniciar seguimiento continuo
+        locationWatchId = navigator.geolocation.watchPosition(
+          showCurrentLocation,
+          (error) => {
+            console.error("Error en seguimiento de ubicación:", error);
+          },
+          options
+        );
+        
+        isTrackingLocation = true;
+        document.getElementById("locate-me-btn").classList.add("active");
+      }
     }
 
     // =========================
@@ -2339,105 +2476,8 @@ pzo: L.icon({
     }
 
     // =========================
-    // Funciones de ubicación mejoradas
+    // Selector de tipo de mapa - CORREGIDO
     // =========================
-    function showCurrentLocation(position) {
-      const lat = position.coords.latitude;
-      const lng = position.coords.longitude;
-      const accuracy = position.coords.accuracy;
-      
-      // Eliminar marcador anterior si existe
-      if (currentLocationMarker) {
-        map.removeLayer(currentLocationMarker);
-      }
-      if (currentAccuracyCircle) {
-        map.removeLayer(currentAccuracyCircle);
-      }
-      
-      // Crear marcador de ubicación
-      currentLocationMarker = L.marker([lat, lng], {
-        icon: L.icon({
-          iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png',
-          shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-          iconSize: [25, 41],
-          iconAnchor: [12, 41],
-          popupAnchor: [1, -34],
-          shadowSize: [41, 41]
-        })
-      }).addTo(map);
-      
-      // Crear círculo de precisión
-      currentAccuracyCircle = L.circle([lat, lng], {
-        radius: accuracy,
-        color: '#00AA00',
-        fillColor: '#00AA00',
-        fillOpacity: 0.2,
-        weight: 1
-      }).addTo(map);
-      
-      // Centrar mapa en la ubicación
-      map.setView([lat, lng], 17);
-      
-      // Agregar popup informativo
-      currentLocationMarker.bindPopup(`
-        <div class="popup-content">
-          <div class="popup-title">Tu ubicación actual</div>
-          <div class="popup-coords">${lat.toFixed(6)}, ${lng.toFixed(6)}</div>
-          <div class="popup-coords">Precisión: ±${accuracy.toFixed(1)} metros</div>
-          <div class="popup-actions">
-            <button class="popup-btn" onclick="clearCurrentLocation()">Cerrar</button>
-          </div>
-        </div>
-      `).openPopup();
-    }
-    
-    function clearCurrentLocation() {
-      if (currentLocationMarker) {
-        map.removeLayer(currentLocationMarker);
-        currentLocationMarker = null;
-      }
-      if (currentAccuracyCircle) {
-        map.removeLayer(currentAccuracyCircle);
-        currentAccuracyCircle = null;
-      }
-    }
-
-    function locateUser() {
-      if (!navigator.geolocation) {
-        alert("La geolocalización no es compatible con este navegador.");
-        return;
-      }
-      
-      // Opciones para mayor precisión
-      const options = {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 0
-      };
-      
-      navigator.geolocation.getCurrentPosition(
-        showCurrentLocation,
-        (error) => {
-          let errorMsg = "Error al obtener la ubicación: ";
-          switch(error.code) {
-            case error.PERMISSION_DENIED:
-              errorMsg += "Permiso denegado";
-              break;
-            case error.POSITION_UNAVAILABLE:
-              errorMsg += "Posición no disponible";
-              break;
-            case error.TIMEOUT:
-              errorMsg += "Tiempo de espera agotado";
-              break;
-            default:
-              errorMsg += "Error desconocido";
-          }
-          alert(errorMsg);
-        },
-        options
-      );
-    }
-
     function switchMapType(type) {
       if (currentMapType === type) return;
 
@@ -2465,7 +2505,7 @@ pzo: L.icon({
       }
 
       currentMapType = type;
-      localStorage.setItem("ftth_sv_rt_map_type", type);
+      localStorage.setItem("fibermapper_map_type", type);
     }
 
     function toggleLabels() {
@@ -2515,7 +2555,7 @@ pzo: L.icon({
         csvContent += row + "\n";
       });
 
-      const filename = `ftth_map_export_${new Date().toISOString().slice(0, 10)}.csv`;
+      const filename = `fibermapper_export_${new Date().toISOString().slice(0, 10)}.csv`;
       downloadFile(filename, csvContent, "text/csv;charset=utf-8;");
     }
 
@@ -2523,15 +2563,15 @@ pzo: L.icon({
       let kmlContent = `<?xml version="1.0" encoding="UTF-8"?>
 <kml xmlns="http://www.opengis.net/kml/2.2">
   <Document>
-    <name>FTTH Map Export</name>
-    <description>Exportado desde FTTH-SV-RT</description>`;
+    <name>Fiber Mapper Export</name>
+    <description>Exportado desde Fiber Mapper</description>`;
 
       // Mapeo de iconos según tipo de activo
       const iconMap = {
         poste: "http://maps.google.com/mapfiles/kml/paddle/P.png",
         nap: "http://maps.google.com/mapfiles/kml/paddle/N.png",
         fat: "http://maps.google.com/mapfiles/kml/paddle/F.png",
-        n1: "http://maps.google.com/mapfiles/kml/paddle/C.png",
+        fdh: "http://maps.google.com/mapfiles/kml/paddle/C.png",
         ont: "http://maps.google.com/mapfiles/kml/paddle/C.png",
         odf: "http://maps.google.com/mapfiles/kml/paddle/O.png",
         box: "http://maps.google.com/mapfiles/kml/paddle/B.png"
@@ -2649,19 +2689,19 @@ pzo: L.icon({
         // Crear un enlace temporal para descargar el archivo
         const a = document.createElement('a');
         a.href = url;
-        a.download = `ftth_export_${new Date().toISOString().slice(0, 10)}.kml`;
+        a.download = `fibermapper_export_${new Date().toISOString().slice(0, 10)}.kml`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
         
         // Esperar un momento antes de abrir WhatsApp para dar tiempo a la descarga
         setTimeout(() => {
-          const text = encodeURIComponent("Te comparto el archivo KML de la infraestructura FTTH");
+          const text = encodeURIComponent("Te comparto el archivo KML de la infraestructura FTTX");
           window.open(`https://wa.me/?text=${text}`, '_blank');
         }, 1000);
       } else {
         // Descarga normal
-        const filename = `ftth_map_export_${new Date().toISOString().slice(0, 10)}.kml`;
+        const filename = `fibermapper_export_${new Date().toISOString().slice(0, 10)}.kml`;
         downloadFile(filename, kmlContent, "application/vnd.google-earth.kml+xml;charset=utf-8;");
       }
     }
@@ -2669,7 +2709,7 @@ pzo: L.icon({
     function shareViaWhatsApp(format) {
       if (format === "csv") {
         const csvContent = generateCSVContent();
-        const text = encodeURIComponent("Datos FTTH-SV-RT:\n" + csvContent);
+        const text = encodeURIComponent("Datos Fiber Mapper:\n" + csvContent);
         window.open(`https://wa.me/?text=${text}`, '_blank');
       } else if (format === "kml") {
         // Para KML, necesitamos crear un archivo temporal
@@ -2707,6 +2747,9 @@ pzo: L.icon({
       alert('Importación KML aún no implementada');
     }
 
+    // =========================
+    // Clear All Data - CORREGIDO
+    // =========================
     function clearAllData() {
       if (!confirm("¿Estás seguro de que deseas eliminar todos los datos? Esta acción no se puede deshacer.")) {
         return;
@@ -2756,8 +2799,9 @@ pzo: L.icon({
       document.getElementById("segment-distance").textContent = "Último segmento: 0.00 metros";
 
       // Limpiar localStorage
-      localStorage.removeItem("ftth_sv_rt_assets");
-      localStorage.removeItem("ftth_sv_rt_asset_counters");
+      localStorage.removeItem("fibermapper_assets");
+      localStorage.removeItem("fibermapper_asset_counters");
+      localStorage.removeItem("fibermapper_map_type");
 
       // Restablecer panel de edición
       document.getElementById("editor-panel").style.display = "none";
@@ -2866,7 +2910,7 @@ pzo: L.icon({
     }
 
     // =========================
-    // Inicialización y Event Listeners
+    // Inicialización y Event Listeners - CORREGIDO
     // =========================
     document.addEventListener("DOMContentLoaded", function() {
       initMap();
@@ -2901,9 +2945,9 @@ pzo: L.icon({
       // Botón para agregar en posición del puntero
       document.getElementById("add-at-pointer-btn").addEventListener("click", addAssetAtPointer);
 
-      // Botones de control del mapa
+      // Botones de control del mapa - CORREGIDO
       document.getElementById("locate-me-btn").addEventListener("click", function() {
-        locateUser();
+        toggleLocationTracking();
       });
 
       document.getElementById("zoom-in-btn").addEventListener("click", function() {
@@ -3082,8 +3126,6 @@ pzo: L.icon({
   </script>
 </body>
 </html>
-
-
 
 
 
