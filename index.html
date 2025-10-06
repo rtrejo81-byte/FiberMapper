@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!DOCTYPE html> 
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
@@ -550,7 +550,6 @@
     /* Modal de exportación */
     .export-modal,
     .gps-modal,
-    .nap-modal,
     .photo-modal {
       position: fixed;
       inset: 0;
@@ -564,7 +563,6 @@
     }
     .export-content,
     .gps-content,
-    .nap-content,
     .photo-content {
       background-color: var(--surface);
       padding: 16px;
@@ -626,36 +624,6 @@
       border-radius: 8px;
       padding: 10px;
       cursor: pointer;
-    }
-
-    /* Modal NAP */
-    .nap-form {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 10px;
-    }
-    .nap-row {
-      display: grid;
-      grid-template-columns: 1fr 2fr;
-      gap: 8px;
-      align-items: center;
-    }
-    .nap-actions {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-      margin-top: 4px;
-    }
-    .nap-photo-preview {
-      max-width: 100%;
-      max-height: 200px;
-      border-radius: 8px;
-      margin-top: 8px;
-      display: none;
-    }
-    .nap-photo-container {
-      grid-column: 1 / span 2;
-      text-align: center;
     }
 
     /* Modal para fotos */
@@ -830,6 +798,214 @@
       color: white;
     }
 
+    /* Nuevos estilos para polígonos */
+    .polygon-controls {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .polygon-control-btn {
+      padding: 8px;
+      text-align: center;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 13px;
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+    }
+
+    .polygon-control-btn.undo {
+      background-color: var(--accent);
+      color: white;
+    }
+
+    .polygon-control-btn.cancel {
+      background-color: var(--error);
+      color: white;
+    }
+    
+    .polygon-control-btn.finish {
+      background-color: var(--success);
+      color: white;
+      grid-column: span 2;
+    }
+
+    .polygon-control-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .polygon-drawing-status {
+      background-color: var(--primary);
+      color: white;
+      padding: 8px;
+      border-radius: 8px;
+      text-align: center;
+      margin-top: 10px;
+      font-size: 13px;
+      display: none;
+    }
+
+    .polygon-area-display {
+      background-color: var(--surface-light);
+      padding: 10px;
+      border-radius: 8px;
+      margin-top: 10px;
+      text-align: center;
+      font-weight: bold;
+      color: var(--secondary);
+    }
+
+    /* Paleta de colores para polígonos */
+    .color-palette {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 6px;
+      margin-top: 10px;
+    }
+
+    .color-option {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: all 0.2s;
+    }
+
+    .color-option.selected {
+      border-color: white;
+      transform: scale(1.1);
+    }
+
+    /* Controles de visibilidad de activos */
+    .visibility-controls {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .visibility-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px;
+      background-color: var(--surface-light);
+      border-radius: 8px;
+    }
+
+    .visibility-label {
+      font-size: 13px;
+    }
+
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 40px;
+      height: 20px;
+    }
+
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #475569;
+      transition: .4s;
+      border-radius: 20px;
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 16px;
+      width: 16px;
+      left: 2px;
+      bottom: 2px;
+      background-color: white;
+      transition: .4s;
+      border-radius: 50%;
+    }
+
+    input:checked + .slider {
+      background-color: var(--success);
+    }
+
+    input:checked + .slider:before {
+      transform: translateX(20px);
+    }
+
+    /* Estilos para la edición de polígonos */
+    .polygon-edit-controls {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .polygon-edit-btn {
+      padding: 8px;
+      text-align: center;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 13px;
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+    }
+
+    .polygon-edit-btn.edit {
+      background-color: var(--accent);
+      color: white;
+    }
+
+    .polygon-edit-btn.save {
+      background-color: var(--success);
+      color: white;
+      grid-column: span 2;
+    }
+
+    .polygon-edit-btn.cancel {
+      background-color: var(--error);
+      color: white;
+    }
+
+    .vertex-marker {
+      background-color: #ff0000;
+      border: 2px solid white;
+      border-radius: 50%;
+      width: 12px;
+      height: 12px;
+      cursor: move;
+    }
+
+    .midpoint-marker {
+      background-color: #00ff00;
+      border: 2px solid white;
+      border-radius: 50%;
+      width: 8px;
+      height: 8px;
+      cursor: pointer;
+    }
+
     /* Responsive */
     @media (max-width: 992px) {
       .main-content {
@@ -924,6 +1100,8 @@
           <option value="ont">ONT</option>
           <option value="odf">ODF</option>
           <option value="box">FDH BOX</option>
+          <option value="polygon">POLÍGONO</option>
+          <option value="homepassed">HOME PASSED</option>
         </select>
 
         <button id="add-gps-btn" title="Agregar activo con GPS">
@@ -996,6 +1174,14 @@
               <div class="stat-value" id="stat-distance">0 m</div>
               <div class="stat-label">Distancia FO</div>
             </div>
+          </div>
+        </div>
+
+        <!-- Control de visibilidad -->
+        <div class="sidebar-section">
+          <div class="sidebar-title">Visibilidad</div>
+          <div class="visibility-controls" id="visibility-controls">
+            <!-- Los controles de visibilidad se generarán dinámicamente -->
           </div>
         </div>
 
@@ -1077,6 +1263,73 @@
           </div>
         </div>
 
+        <!-- Polígonos -->
+        <div class="sidebar-section">
+          <div class="sidebar-title">Polígonos</div>
+          
+          <!-- Paleta de colores para polígonos -->
+          <div class="color-palette" id="polygon-color-palette">
+            <div class="color-option selected" style="background-color: #10b981;" data-color="#10b981"></div>
+            <div class="color-option" style="background-color: #3b82f6;" data-color="#3b82f6"></div>
+            <div class="color-option" style="background-color: #f59e0b;" data-color="#f59e0b"></div>
+            <div class="color-option" style="background-color: #ef4444;" data-color="#ef4444"></div>
+            <div class="color-option" style="background-color: #8b5cf6;" data-color="#8b5cf6"></div>
+            <div class="color-option" style="background-color: #06b6d4;" data-color="#06b6d4"></div>
+            <div class="color-option" style="background-color: #84cc16;" data-color="#84cc16"></div>
+            <div class="color-option" style="background-color: #f97316;" data-color="#f97316"></div>
+            <div class="color-option" style="background-color: #ec4899;" data-color="#ec4899"></div>
+            <div class="color-option" style="background-color: #64748b;" data-color="#64748b"></div>
+          </div>
+
+          <div class="polygon-area-display" id="polygon-area">Área: 0.00 m²</div>
+
+          <!-- Controles para polígonos -->
+          <div class="polygon-controls" id="polygon-controls" style="display: none;">
+            <button class="polygon-control-btn undo" id="undo-polygon-point" disabled>
+              <i class="fas fa-undo"></i> Deshacer
+            </button>
+            <button class="polygon-control-btn cancel" id="cancel-polygon-drawing">
+              <i class="fas fa-times"></i> Cancelar
+            </button>
+            <button class="polygon-control-btn finish" id="finish-polygon-drawing" disabled>
+              <i class="fas fa-check"></i> Finalizar Polígono
+            </button>
+          </div>
+
+          <div class="polygon-edit-controls" id="polygon-edit-controls" style="display: none;">
+            <button class="polygon-edit-btn edit" id="add-polygon-vertex">
+              <i class="fas fa-plus"></i> Agregar Vértice
+            </button>
+            <button class="polygon-edit-btn cancel" id="cancel-polygon-edit">
+              <i class="fas fa-times"></i> Cancelar
+            </button>
+            <button class="polygon-edit-btn save" id="save-polygon-edit">
+              <i class="fas fa-save"></i> Guardar Cambios
+            </button>
+          </div>
+
+          <div class="polygon-drawing-status" id="polygon-drawing-status">
+            <i class="fas fa-drawing-pin"></i> Dibujando polígono - Haz clic para agregar vértices
+          </div>
+
+          <div class="polygon-edit-status" id="polygon-edit-status" style="display: none;">
+            <i class="fas fa-edit"></i> Editando polígono - Arrastra vértices o haz clic en segmentos
+          </div>
+
+          <div class="manual-coords">
+            <div style="font-weight:700;margin-bottom:8px;">Agregar vértice por coordenadas</div>
+            <div class="manual-coords-grid">
+              <label>Latitud</label>
+              <input type="number" step="0.000001" id="manual-polygon-lat" />
+              <label>Longitud</label>
+              <input type="number" step="0.000001" id="manual-polygon-lng" />
+              <button class="manual-coords-btn" id="add-manual-polygon-point">
+                Agregar vértice con coords
+              </button>
+            </div>
+          </div>
+        </div>
+
         <!-- Editor -->
         <div class="sidebar-section">
           <div class="sidebar-title">Editor</div>
@@ -1101,6 +1354,8 @@
                 <option value="ont">ONT</option>
                 <option value="odf">ODF</option>
                 <option value="box">FDH BOX</option>
+                <option value="polygon">POLÍGONO</option>
+                <option value="homepassed">HOME PASSED</option>
               </select>
 
               <span class="editor-label">Latitud:</span>
@@ -1129,7 +1384,7 @@
         <div class="hint">
           <i class="fas fa-lightbulb"></i> Consejo: Haz clic en el mapa para agregar un activo
           del tipo seleccionado. Para cables, haz clic en varios puntos para crear una ruta.
-          Usa el botón "Finalizar Cable" para terminar.
+          Para polígonos, haz clic para agregar vértices y doble clic para finalizar.
         </div>
 
         <div class="copyright">
@@ -1191,6 +1446,8 @@
             <option value="ont">ONT</option>
             <option value="odf">ODF</option>
             <option value="box">FDH BOX</option>
+            <option value="polygon">POLÍGONO</option>
+            <option value="homepassed">HOME PASSED</option>
           </select>
         </div>
         <div class="gps-row">
@@ -1208,34 +1465,6 @@
         <div class="gps-actions">
           <button class="btn-outline" id="gps-cancel">Cancelar</button>
           <button class="btn-primary" id="gps-confirm">Obtener ubicación</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Modal para editar NAP -->
-  <div class="nap-modal" id="nap-modal">
-    <div class="nap-content">
-      <h2 style="margin-bottom:8px;">Editar NAP</h2>
-      <div class="nap-form">
-        <div class="nap-row">
-          <label for="nap-name">Nombre del NAP</label>
-          <input type="text" id="nap-name" placeholder="Ej: NAP_001">
-        </div>
-        <div class="nap-row">
-          <label for="nap-description">Descripción</label>
-          <input type="text" id="nap-description" placeholder="Descripción opcional">
-        </div>
-        <div class="nap-photo-container">
-          <label for="nap-photo" class="file-upload-label">
-            <i class="fas fa-camera"></i> Seleccionar foto
-            <input type="file" id="nap-photo" accept="image/*" capture="environment">
-          </label>
-          <img id="nap-photo-preview" class="nap-photo-preview" alt="Vista previa">
-        </div>
-        <div class="nap-actions">
-          <button class="btn-outline" id="nap-cancel">Cancelar</button>
-          <button class="btn-primary" id="nap-confirm">Guardar NAP</button>
         </div>
       </div>
     </div>
@@ -1267,13 +1496,14 @@
 
   <script>
     // =========================
-    // Estado de la aplicación - CORREGIDO
+    // Estado de la aplicación
     // =========================
     let assets = [];
     let selectedAssetId = null;
     let map;
     let markers = {};
     let polylines = {};
+    let polygons = {};
     let labelLayers = {};
     let distanceLabels = [];
     let showLabels = true;
@@ -1288,13 +1518,21 @@
     let tempMarkers = [];
     let tempPolylines = [];
 
+    // Nuevas variables para polígonos
+    let polygonPoints = [];
+    let drawingPolygon = false;
+    let tempPolygonMarkers = [];
+    let tempPolygonLines = [];
+    let tempPolygon = null;
+    let currentPolygonColor = "#10b981";
+
     let selectedExportFormat = null;
 
     // Variables para el NAP
     let currentNapData = null;
     let napPhotoData = null;
 
-    // Nuevas variables para control de ubicación - CORREGIDO
+    // Nuevas variables para control de ubicación
     let currentLocationMarker = null;
     let currentAccuracyCircle = null;
     let locationWatchId = null;
@@ -1310,7 +1548,31 @@
     // Variable para controlar el estado del panel lateral
     let sidebarExpanded = true;
 
-    // Contadores para numeración automática - CORREGIDO
+    // Variables para edición de polígonos
+    let editingPolygon = false;
+    let currentEditingPolygonId = null;
+    let vertexMarkers = [];
+    let midpointMarkers = [];
+    let originalPolygonPoints = [];
+
+    // Controles de visibilidad
+    let assetVisibility = {
+      poste: true,
+      nap: true,
+      cab: true,
+      fat: true,
+      olt: true,
+      fdh: true,
+      emp: true,
+      pzo: true,
+      ont: true,
+      odf: true,
+      box: true,
+      polygon: true,
+      homepassed: true,
+    };
+
+    // Contadores para numeración automática
     const assetCounters = {
         poste: 0,
         nap: 0,
@@ -1321,23 +1583,22 @@
         pzo: 0,
         ont: 0,
         odf: 0,
-        box: 0
+        box: 0,
+        polygon: 0,
+        homepassed: 0,
     };
 
     // Íconos personalizados por tipo
     const ICONS = {
       poste: L.icon({
-        iconUrl:
-          "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-grey.png",
-        shadowUrl:
-          "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+        iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-grey.png",
+        shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
         iconSize: [25, 41],
         iconAnchor: [12, 41],
         popupAnchor: [1, -34],
         shadowSize: [41, 41],
       }),
-
-       nap: L.icon({
+      nap: L.icon({
     iconUrl: "nap.png",
     shadowUrl: "icons/shadow.png",
     iconSize: [32, 32],
@@ -1406,13 +1667,30 @@ pzo: L.icon({
     iconSize: [32, 32],
     iconAnchor: [16, 32],
     popupAnchor: [0, -28],
-   }),
-  };
+      }),
+      homepassed: L.icon({
+        iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-cyan.png",
+        shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34],
+        shadowSize: [41, 41],
+      }),
+      default: L.icon({
+        iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-blue.png",
+        shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34],
+        shadowSize: [41, 41],
+      }),
+    };
 
     // =========================
     // Inicialización del mapa
     // =========================
     function initMap() {
+      console.log("Inicializando mapa...");
       map = L.map("map").setView([13.6929, -89.2182], 13);
 
       standardTileLayer = L.tileLayer(
@@ -1444,28 +1722,37 @@ pzo: L.icon({
       standardTileLayer.addTo(map);
 
       // Click en mapa para agregar activo o dibujar cable
-      map.on("click", (e) => {
+      map.on("click", function(e) {
         const type = document.getElementById("asset-type-selector").value;
+        console.log("Click en mapa, tipo seleccionado:", type);
         if (type === "cab") {
           // Dibujo de cable
           if (!drawingCable) {
             startCableDrawing();
           }
           addCablePoint(e.latlng);
-        } else if (type === "nap") {
-          // Para NAP, abrimos el modal de edición
-          openNapModal(e.latlng);
+        } else if (type === "polygon") {
+          // Dibujo de polígono
+          if (!drawingPolygon) {
+            startPolygonDrawing();
+          }
+          addPolygonPoint(e.latlng);
         } else {
           addAsset(e.latlng.lat, e.latlng.lng);
         }
       });
 
       // Doble clic para finalizar cable (mantenido por compatibilidad)
-      map.on("dblclick", (e) => {
+      map.on("dblclick", function(e) {
         if (drawingCable && cablePoints.length > 1) {
           finishCableDrawing();
         }
+        if (drawingPolygon && polygonPoints.length > 2) {
+          finishPolygonDrawing();
+        }
       });
+      
+      console.log("Mapa inicializado correctamente");
     }
 
     // =========================
@@ -1491,7 +1778,7 @@ pzo: L.icon({
       }
       
       // Ajustar el mapa después de cambiar el tamaño del panel
-      setTimeout(() => {
+      setTimeout(function() {
         map.invalidateSize();
       }, 300);
     }
@@ -1524,18 +1811,6 @@ pzo: L.icon({
       URL.revokeObjectURL(url);
     }
 
-    function dataURLtoBlob(dataurl) {
-      const arr = dataurl.split(',');
-      const mime = arr[0].match(/:(.*?);/)[1];
-      const bstr = atob(arr[1]);
-      let n = bstr.length;
-      const u8arr = new Uint8Array(n);
-      while (n--) {
-        u8arr[n] = bstr.charCodeAt(n);
-      }
-      return new Blob([u8arr], { type: mime });
-    }
-
     // =========================
     // Funciones para el puntero estático
     // =========================
@@ -1545,9 +1820,9 @@ pzo: L.icon({
       const addAtPointerBtn = document.getElementById("add-at-pointer-btn");
       
       // Mostrar puntero estático cuando:
-      // 1. Se selecciona un tipo de activo (excepto cable)
-      // 2. Se está dibujando un cable
-      if (assetType !== "cab" || drawingCable) {
+      // 1. Se selecciona un tipo de activo (excepto cable y polígono)
+      // 2. Se está dibujando un cable o polígono
+      if ((assetType !== "cab" && assetType !== "polygon") || drawingCable || drawingPolygon) {
         staticCrosshair.style.display = "block";
         addAtPointerBtn.style.display = "flex";
         staticCrosshairVisible = true;
@@ -1571,19 +1846,22 @@ pzo: L.icon({
           startCableDrawing();
         }
         addCablePoint(center);
-      } else if (type === "nap") {
-        openNapModal(center);
+      } else if (type === "polygon") {
+        if (!drawingPolygon) {
+          startPolygonDrawing();
+        }
+        addPolygonPoint(center);
       } else {
         addAsset(center.lat, center.lng);
       }
     }
 
     // =========================
-    // Persistencia - CORREGIDO
+    // Persistencia
     // =========================
     function saveData() {
       // Convertimos las fotos a formato almacenable
-      const assetsToSave = assets.map(asset => {
+      const assetsToSave = assets.map(function(asset) {
         if (asset.photo && asset.photo.startsWith('data:')) {
           // No guardamos datos de imagen grandes en localStorage
           const copy = {...asset};
@@ -1597,17 +1875,19 @@ pzo: L.icon({
       localStorage.setItem("fibermapper_assets", JSON.stringify(assetsToSave));
       localStorage.setItem("fibermapper_asset_counters", JSON.stringify(assetCounters));
       localStorage.setItem("fibermapper_map_type", currentMapType);
+      localStorage.setItem("fibermapper_visibility", JSON.stringify(assetVisibility));
     }
 
     function loadSavedData() {
       const savedAssets = localStorage.getItem("fibermapper_assets");
       const savedMapType = localStorage.getItem("fibermapper_map_type");
       const savedCounters = localStorage.getItem("fibermapper_asset_counters");
+      const savedVisibility = localStorage.getItem("fibermapper_visibility");
 
       if (savedAssets) {
         assets = JSON.parse(savedAssets);
 
-        assets.forEach((asset) => {
+        assets.forEach(function(asset) {
           if (asset.type === "cab" && asset.points) {
             addCableToMap(asset);
             // Reponer etiquetas de distancia
@@ -1619,6 +1899,8 @@ pzo: L.icon({
                 addDistanceLabel(a, b, d);
               }
             }
+          } else if (asset.type === "polygon" && asset.points) {
+            addPolygonToMap(asset);
           } else if (asset.lat && asset.lng) {
             addMarker(asset);
           }
@@ -1632,7 +1914,7 @@ pzo: L.icon({
 
       if (savedCounters) {
         const counters = JSON.parse(savedCounters);
-        Object.keys(counters).forEach(key => {
+        Object.keys(counters).forEach(function(key) {
           if (assetCounters.hasOwnProperty(key)) {
             assetCounters[key] = counters[key];
           }
@@ -1640,6 +1922,12 @@ pzo: L.icon({
       }
 
       if (savedMapType) switchMapType(savedMapType);
+      
+      if (savedVisibility) {
+        assetVisibility = JSON.parse(savedVisibility);
+        updateVisibilityControls();
+        applyVisibility();
+      }
     }
 
     // =========================
@@ -1648,16 +1936,16 @@ pzo: L.icon({
     function addAsset(lat, lng, label, type, photo, description) {
       const assetType = type || document.getElementById("asset-type-selector").value;
       
-      // Si no es cable, generar numeración automática
-      if (assetType !== "cab") {
+      // Si no es cable ni polígono, generar numeración automática
+      if (assetType !== "cab" && assetType !== "polygon") {
         assetCounters[assetType] = (assetCounters[assetType] || 0) + 1;
       }
       
       const id = generateId();
-      const assetLabel = label || `${assetType.toUpperCase()}_${assetCounters[assetType]}`;
+      const assetLabel = label || assetType.toUpperCase() + "_" + assetCounters[assetType];
 
       const asset = {
-        id,
+        id: id,
         type: assetType,
         label: assetLabel,
         lat: Number(lat.toFixed(6)),
@@ -1673,7 +1961,13 @@ pzo: L.icon({
       }
 
       assets.push(asset);
-      addMarker(asset);
+      
+      if (assetType === "polygon") {
+        // Para polígonos, no agregamos marcador, se maneja diferente
+      } else {
+        addMarker(asset);
+      }
+      
       addLabelToAsset(asset);
       renderAssetsList();
       updateStats();
@@ -1690,7 +1984,7 @@ pzo: L.icon({
 
       const marker = L.marker([asset.lat, asset.lng], {
         draggable: true,
-        icon,
+        icon: icon,
       }).addTo(map);
 
       marker.on("dragend", function () {
@@ -1736,18 +2030,30 @@ pzo: L.icon({
       marker.bindPopup(popupContent, { maxWidth: 300 });
 
       markers[asset.id] = marker;
+      
+      // Aplicar visibilidad
+      if (!assetVisibility[asset.type]) {
+        map.removeLayer(marker);
+      }
     }
 
     function selectAsset(id) {
       selectedAssetId = id;
-      const asset = assets.find((a) => a.id === id);
+      const asset = assets.find(function(a) { return a.id === id; });
 
       if (asset) {
         document.getElementById("editor-id").textContent = asset.id;
         document.getElementById("editor-label").value = asset.label;
         document.getElementById("editor-type").value = asset.type;
-        document.getElementById("editor-lat").value = asset.lat ?? "";
-        document.getElementById("editor-lng").value = asset.lng ?? "";
+        
+        // Para polígonos, mostrar el primer punto como referencia
+        if (asset.type === "polygon" && asset.points && asset.points.length > 0) {
+          document.getElementById("editor-lat").value = asset.points[0][0] || "";
+          document.getElementById("editor-lng").value = asset.points[0][1] || "";
+        } else {
+          document.getElementById("editor-lat").value = asset.lat || "";
+          document.getElementById("editor-lng").value = asset.lng || "";
+        }
         
         // Actualizar propiedades incluyendo descripción
         const props = asset.props || {};
@@ -1757,19 +2063,17 @@ pzo: L.icon({
         document.getElementById("editor-panel").style.display = "block";
 
         // resaltar en lista
-        [...document.querySelectorAll(".asset-item")].forEach((el) =>
-          el.classList.toggle(
-            "selected",
-            el.getAttribute("data-id") === asset.id
-          )
-        );
+        var assetItems = document.querySelectorAll(".asset-item");
+        assetItems.forEach(function(el) {
+          el.classList.toggle("selected", el.getAttribute("data-id") === asset.id);
+        });
 
         if (markers[asset.id]) markers[asset.id].openPopup();
       }
     }
 
     function updateAsset(id, changes) {
-      const idx = assets.findIndex((a) => a.id === id);
+      const idx = assets.findIndex(function(a) { return a.id === id; });
       if (idx === -1) return;
       const prev = assets[idx];
       const updated = { ...prev, ...changes };
@@ -1782,6 +2086,12 @@ pzo: L.icon({
           delete markers[updated.id];
         }
         addCableToMap(updated);
+      } else if (updated.type === "polygon") {
+        if (markers[updated.id]) {
+          map.removeLayer(markers[updated.id]);
+          delete markers[updated.id];
+        }
+        addPolygonToMap(updated);
       } else {
         addMarker(updated);
       }
@@ -1800,7 +2110,7 @@ pzo: L.icon({
     }
 
     function deleteAsset(id) {
-      const asset = assets.find((a) => a.id === id);
+      const asset = assets.find(function(a) { return a.id === id; });
       if (!asset) return;
 
       if (markers[id]) {
@@ -1811,6 +2121,10 @@ pzo: L.icon({
         map.removeLayer(polylines[id]);
         delete polylines[id];
       }
+      if (polygons[id]) {
+        map.removeLayer(polygons[id]);
+        delete polygons[id];
+      }
       if (labelLayers[id]) {
         map.removeLayer(labelLayers[id]);
         delete labelLayers[id];
@@ -1818,11 +2132,11 @@ pzo: L.icon({
 
       // limpiar etiquetas de distancia de ese cable
       if (asset.type === "cab" && asset.points && asset.points.length > 1) {
-        distanceLabels.forEach((m) => map.removeLayer(m));
+        distanceLabels.forEach(function(m) { map.removeLayer(m); });
         distanceLabels = [];
       }
 
-      assets = assets.filter((a) => a.id !== id);
+      assets = assets.filter(function(a) { return a.id !== id; });
       renderAssetsList();
       updateStats();
       calculateCableTotals();
@@ -1839,8 +2153,8 @@ pzo: L.icon({
       list.innerHTML = "";
 
       assets
-        .filter((a) => (a.label || "").toLowerCase().includes(q))
-        .forEach((asset) => {
+        .filter(function(a) { return (a.label || "").toLowerCase().includes(q); })
+        .forEach(function(asset) {
           const el = document.createElement("div");
           el.className = "asset-item";
           el.setAttribute("data-id", asset.id);
@@ -1850,8 +2164,13 @@ pzo: L.icon({
               <div class="asset-name">${asset.label}</div>
               <div class="asset-type">${asset.type.toUpperCase()}</div>
             </div>
-            <div class="asset-coords">${asset.lat ?? "—"}, ${asset.lng ?? "—"}</div>
           `;
+          
+          if (asset.type === "polygon") {
+            assetInfo += `<div class="asset-coords">Polígono - ${asset.points ? asset.points.length : 0} vértices</div>`;
+          } else {
+            assetInfo += `<div class="asset-coords">${asset.lat || "—"}, ${asset.lng || "—"}</div>`;
+          }
           
           // Mostrar icono de cámara si tiene foto
           if (asset.photo || asset.hasPhoto) {
@@ -1859,17 +2178,18 @@ pzo: L.icon({
           }
           
           el.innerHTML = assetInfo;
-          el.addEventListener("click", () => selectAsset(asset.id));
+          el.addEventListener("click", function() { selectAsset(asset.id); });
           list.appendChild(el);
         });
     }
 
     function updateStats() {
-      const totalAssets = assets.filter((a) => a.type !== "cab").length;
-      const totalCables = assets.filter((a) => a.type === "cab").length;
+      const totalAssets = assets.filter(function(a) { return a.type !== "cab" && a.type !== "polygon"; }).length;
+      const totalCables = assets.filter(function(a) { return a.type === "cab"; }).length;
+      const totalPolygons = assets.filter(function(a) { return a.type === "polygon"; }).length;
       const totalFO = assets
-        .filter((a) => a.type === "cab" && a.cableType === "fo")
-        .reduce((s, a) => s + (a.distance || 0), 0);
+        .filter(function(a) { return a.type === "cab" && a.cableType === "fo"; })
+        .reduce(function(s, a) { return s + (a.distance || 0); }, 0);
 
       document.getElementById("stat-assets").textContent = totalAssets;
       document.getElementById("stat-cables").textContent = totalCables;
@@ -1887,12 +2207,32 @@ pzo: L.icon({
       if (asset.type === "cab" && asset.points && asset.points.length > 0) {
         const mid = Math.floor(asset.points.length / 2);
         position = [asset.points[mid][0], asset.points[mid][1]];
+      } else if (asset.type === "polygon" && asset.points && asset.points.length > 0) {
+        // Para polígonos, calcular el centroide
+        let sumLat = 0, sumLng = 0;
+        asset.points.forEach(function(point) {
+          sumLat += point[0];
+          sumLng += point[1];
+        });
+        position = [sumLat / asset.points.length, sumLng / asset.points.length];
+        
+        // Contar HOME PASSED dentro del polígono
+        const homePassedCount = countHomePassedInPolygon(asset);
+        if (homePassedCount > 0) {
+          asset.homePassedCount = homePassedCount;
+        }
       }
 
-      const labelText =
-        asset.type === "cab" && asset.distance
-          ? `${asset.label} (${(asset.distance || 0).toFixed(0)}m)`
-          : asset.label;
+      let labelText = asset.label;
+      
+      if (asset.type === "cab" && asset.distance) {
+        labelText += " (" + (asset.distance || 0).toFixed(0) + "m)";
+      } else if (asset.type === "polygon" && asset.area) {
+        labelText += " (" + (asset.area || 0).toFixed(0) + "m²)";
+        if (asset.homePassedCount > 0) {
+          labelText += " HP=" + asset.homePassedCount;
+        }
+      }
 
       const label = L.divIcon({
         className: "map-label",
@@ -1905,6 +2245,11 @@ pzo: L.icon({
       labelLayers[asset.id] = m;
 
       if (!showLabels) map.removeLayer(m);
+      
+      // Aplicar visibilidad
+      if (!assetVisibility[asset.type]) {
+        map.removeLayer(m);
+      }
     }
 
     function addDistanceLabel(pointA, pointB, distance) {
@@ -1913,9 +2258,9 @@ pzo: L.icon({
 
       const label = L.divIcon({
         className: "distance-label",
-        html: `${distance.toFixed(2)}m`,
-        iconSize: [Math.max(`${distance.toFixed(2)}m`.length * 7, 24), 18],
-        iconAnchor: [Math.max(`${distance.toFixed(2)}m`.length * 3.5, 12), 9],
+        html: distance.toFixed(2) + "m",
+        iconSize: [Math.max((distance.toFixed(2) + "m").length * 7, 24), 18],
+        iconAnchor: [Math.max((distance.toFixed(2) + "m").length * 3.5, 12), 9],
       });
 
       const marker = L.marker([midLat, midLng], {
@@ -1928,7 +2273,7 @@ pzo: L.icon({
     }
 
     // =========================
-    // Funciones de ubicación mejoradas - CORREGIDO
+    // Funciones de ubicación mejoradas
     // =========================
     function showCurrentLocation(position) {
       const lat = position.coords.latitude;
@@ -2023,7 +2368,7 @@ pzo: L.icon({
         // Obtener ubicación actual
         navigator.geolocation.getCurrentPosition(
           showCurrentLocation,
-          (error) => {
+          function(error) {
             let errorMsg = "Error al obtener la ubicación: ";
             switch(error.code) {
               case error.PERMISSION_DENIED:
@@ -2046,7 +2391,7 @@ pzo: L.icon({
         // Iniciar seguimiento continuo
         locationWatchId = navigator.geolocation.watchPosition(
           showCurrentLocation,
-          (error) => {
+          function(error) {
             console.error("Error en seguimiento de ubicación:", error);
           },
           options
@@ -2055,74 +2400,6 @@ pzo: L.icon({
         isTrackingLocation = true;
         document.getElementById("locate-me-btn").classList.add("active");
       }
-    }
-
-    // =========================
-    // Funciones para NAP (Nuevo Punto de Acceso)
-    // =========================
-    function openNapModal(latlng) {
-      currentNapData = {
-        lat: latlng.lat,
-        lng: latlng.lng
-      };
-      napPhotoData = null;
-      
-      // Limpiar formulario
-      document.getElementById("nap-name").value = "";
-      document.getElementById("nap-description").value = "";
-      document.getElementById("nap-photo-preview").style.display = "none";
-      document.getElementById("nap-photo-preview").src = "";
-      document.getElementById("nap-photo").value = "";
-      
-      // Mostrar modal
-      document.getElementById("nap-modal").style.display = "flex";
-    }
-
-    function closeNapModal() {
-      document.getElementById("nap-modal").style.display = "none";
-      currentNapData = null;
-      napPhotoData = null;
-    }
-
-    function saveNap() {
-      const name = document.getElementById("nap-name").value.trim();
-      const description = document.getElementById("nap-description").value.trim();
-      
-      if (!name) {
-        alert("Por favor ingresa un nombre para el NAP");
-        return;
-      }
-      
-      // Crear el asset NAP
-      addAsset(
-        currentNapData.lat, 
-        currentNapData.lng, 
-        name, 
-        "nap",
-        napPhotoData,
-        description
-      );
-      
-      closeNapModal();
-    }
-
-    function handleNapPhotoUpload(event) {
-      const file = event.target.files[0];
-      if (!file) return;
-      
-      if (!file.type.match('image.*')) {
-        alert("Por favor selecciona solo archivos de imagen");
-        return;
-      }
-      
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        napPhotoData = e.target.result;
-        const preview = document.getElementById("nap-photo-preview");
-        preview.src = napPhotoData;
-        preview.style.display = "block";
-      };
-      reader.readAsDataURL(file);
     }
 
     // =========================
@@ -2226,9 +2503,7 @@ pzo: L.icon({
           cablePoints[cablePoints.length - 1].lat,
           cablePoints[cablePoints.length - 1].lng
         );
-        document.getElementById(
-          "segment-distance"
-        ).textContent = `Último segmento: ${last.toFixed(2)} metros`;
+        document.getElementById("segment-distance").textContent = "Último segmento: " + last.toFixed(2) + " metros";
 
         addDistanceLabel(
           cablePoints[cablePoints.length - 2],
@@ -2289,9 +2564,7 @@ pzo: L.icon({
             cablePoints[cablePoints.length - 1].lat,
             cablePoints[cablePoints.length - 1].lng
           );
-          document.getElementById(
-            "segment-distance"
-          ).textContent = `Último segmento: ${last.toFixed(2)} metros`;
+          document.getElementById("segment-distance").textContent = "Último segmento: " + last.toFixed(2) + " metros";
         } else {
           document.getElementById("segment-distance").textContent = "Último segmento: 0.00 metros";
         }
@@ -2310,15 +2583,15 @@ pzo: L.icon({
       if (!drawingCable) return;
       
       // Limpiar todos los elementos temporales
-      tempMarkers.forEach((m) => map.removeLayer(m));
-      tempPolylines.forEach((l) => map.removeLayer(l));
+      tempMarkers.forEach(function(m) { map.removeLayer(m); });
+      tempPolylines.forEach(function(l) { map.removeLayer(l); });
       tempMarkers = [];
       tempPolylines = [];
       cablePoints = [];
       drawingCable = false;
       
       // Limpiar etiquetas de distancia temporales
-      distanceLabels.forEach((label) => map.removeLayer(label));
+      distanceLabels.forEach(function(label) { map.removeLayer(label); });
       distanceLabels = [];
       
       // Ocultar controles de cable
@@ -2343,12 +2616,12 @@ pzo: L.icon({
       const totalDistance = calculateTotalDistance(cablePoints);
 
       const asset = {
-        id,
+        id: id,
         type: "cab",
         cableType: currentCableType,
         installationType: currentCableInstallation,
-        label: `CAB_${id.substring(0, 4)}`,
-        points: cablePoints.map((p) => [Number(p.lat.toFixed(6)), Number(p.lng.toFixed(6))]),
+        label: "CAB_" + id.substring(0, 4),
+        points: cablePoints.map(function(p) { return [Number(p.lat.toFixed(6)), Number(p.lng.toFixed(6))]; }),
         distance: totalDistance,
         props: {},
       };
@@ -2356,8 +2629,8 @@ pzo: L.icon({
       assets.push(asset);
 
       // limpiar temporales
-      tempMarkers.forEach((m) => map.removeLayer(m));
-      tempPolylines.forEach((l) => map.removeLayer(l));
+      tempMarkers.forEach(function(m) { map.removeLayer(m); });
+      tempPolylines.forEach(function(l) { map.removeLayer(l); });
       tempMarkers = [];
       tempPolylines = [];
       cablePoints = [];
@@ -2368,8 +2641,7 @@ pzo: L.icon({
       document.getElementById("drawing-status").style.display = "none";
 
       updateDistanceDisplay(0);
-      document.getElementById("segment-distance").textContent =
-        "Último segmento: 0.00 metros";
+      document.getElementById("segment-distance").textContent = "Último segmento: 0.00 metros";
 
       addCableToMap(asset);
       addLabelToAsset(asset);
@@ -2394,7 +2666,7 @@ pzo: L.icon({
         dashArray: dashArray,
       }).addTo(map);
 
-      poly.on("click", () => selectAsset(asset.id));
+      poly.on("click", function() { selectAsset(asset.id); });
 
       const distance = asset.distance || 0;
       const installationType = asset.installationType === "aerial" ? "Aéreo" : "Ducto";
@@ -2412,6 +2684,11 @@ pzo: L.icon({
       `);
 
       polylines[asset.id] = poly;
+      
+      // Aplicar visibilidad
+      if (!assetVisibility[asset.type]) {
+        map.removeLayer(poly);
+      }
     }
 
     function calculateDistance(lat1, lng1, lat2, lng2) {
@@ -2442,9 +2719,7 @@ pzo: L.icon({
     }
 
     function updateDistanceDisplay(distance) {
-      document.getElementById(
-        "cable-distance"
-      ).textContent = `Distancia: ${distance.toFixed(2)} metros`;
+      document.getElementById("cable-distance").textContent = "Distancia: " + distance.toFixed(2) + " metros";
     }
 
     function calculateCableTotals() {
@@ -2452,8 +2727,8 @@ pzo: L.icon({
       let totalDrop = 0;
 
       assets
-        .filter((a) => a.type === "cab")
-        .forEach((cable) => {
+        .filter(function(a) { return a.type === "cab"; })
+        .forEach(function(cable) {
           if (cable.cableType === "fo") {
             totalFO += cable.distance || 0;
           } else if (cable.cableType === "drop") {
@@ -2461,14 +2736,732 @@ pzo: L.icon({
           }
         });
 
-      document.getElementById("total-fo").textContent =
-        totalFO.toFixed(0) + " m";
-      document.getElementById("total-drop").textContent =
-        totalDrop.toFixed(0) + " m";
+      document.getElementById("total-fo").textContent = totalFO.toFixed(0) + " m";
+      document.getElementById("total-drop").textContent = totalDrop.toFixed(0) + " m";
     }
 
     // =========================
-    // Selector de tipo de mapa - CORREGIDO
+    // Polígonos - Funciones nuevas
+    // =========================
+    function startPolygonDrawing() {
+      drawingPolygon = true;
+      polygonPoints = [];
+      
+      // Mostrar controles de polígono
+      document.getElementById("polygon-controls").style.display = "grid";
+      document.getElementById("polygon-drawing-status").style.display = "block";
+      document.getElementById("undo-polygon-point").disabled = true;
+      document.getElementById("finish-polygon-drawing").disabled = true;
+      
+      // Actualizar puntero estático
+      updateStaticCrosshair();
+    }
+
+    function addPolygonPoint(latlng) {
+      if (!drawingPolygon) return;
+      
+      polygonPoints.push(latlng);
+
+      // Punto temporal
+      const m = L.circleMarker(latlng, {
+        radius: 5,
+        color: currentPolygonColor,
+        fillColor: currentPolygonColor,
+        fillOpacity: 0.8,
+      }).addTo(map);
+      tempPolygonMarkers.push(m);
+
+      // Línea temporal
+      if (polygonPoints.length > 1) {
+        const pl = L.polyline(polygonPoints, {
+          color: currentPolygonColor,
+          weight: 2,
+        }).addTo(map);
+        tempPolygonLines.push(pl);
+      }
+      
+      // Polígono temporal
+      if (polygonPoints.length > 2) {
+        if (tempPolygon) {
+          map.removeLayer(tempPolygon);
+        }
+        
+        tempPolygon = L.polygon(polygonPoints, {
+          color: currentPolygonColor,
+          weight: 2,
+          fillColor: currentPolygonColor,
+          fillOpacity: 0.4, // 40% de opacidad
+        }).addTo(map);
+        
+        // Calcular área
+        const area = calculatePolygonArea(polygonPoints);
+        document.getElementById("polygon-area").textContent = "Área: " + area.toFixed(2) + " m²";
+      }
+      
+      // Habilitar botones según cantidad de puntos
+      document.getElementById("undo-polygon-point").disabled = polygonPoints.length === 0;
+      document.getElementById("finish-polygon-drawing").disabled = polygonPoints.length < 3;
+    }
+
+    function undoLastPolygonPoint() {
+      if (polygonPoints.length === 0) return;
+      
+      // Eliminar último punto y elementos temporales asociados
+      polygonPoints.pop();
+      
+      // Eliminar marcador temporal
+      if (tempPolygonMarkers.length > 0) {
+        const lastMarker = tempPolygonMarkers.pop();
+        map.removeLayer(lastMarker);
+      }
+      
+      // Eliminar polyline temporal
+      if (tempPolygonLines.length > 0) {
+        const lastPolyline = tempPolygonLines.pop();
+        map.removeLayer(lastPolyline);
+      }
+      
+      // Redibujar polígono temporal si aún quedan puntos suficientes
+      if (tempPolygon) {
+        map.removeLayer(tempPolygon);
+        tempPolygon = null;
+      }
+      
+      if (polygonPoints.length > 2) {
+        tempPolygon = L.polygon(polygonPoints, {
+          color: currentPolygonColor,
+          weight: 2,
+          fillColor: currentPolygonColor,
+          fillOpacity: 0.4,
+        }).addTo(map);
+        
+        // Recalcular área
+        const area = calculatePolygonArea(polygonPoints);
+        document.getElementById("polygon-area").textContent = "Área: " + area.toFixed(2) + " m²";
+      } else {
+        document.getElementById("polygon-area").textContent = "Área: 0.00 m²";
+      }
+      
+      // Actualizar estado de los botones
+      document.getElementById("undo-polygon-point").disabled = polygonPoints.length === 0;
+      document.getElementById("finish-polygon-drawing").disabled = polygonPoints.length < 3;
+    }
+
+    function cancelPolygonDrawing() {
+      if (!drawingPolygon) return;
+      
+      // Limpiar todos los elementos temporales
+      tempPolygonMarkers.forEach(function(m) { map.removeLayer(m); });
+      tempPolygonLines.forEach(function(l) { map.removeLayer(l); });
+      if (tempPolygon) {
+        map.removeLayer(tempPolygon);
+        tempPolygon = null;
+      }
+      tempPolygonMarkers = [];
+      tempPolygonLines = [];
+      polygonPoints = [];
+      drawingPolygon = false;
+      
+      // Ocultar controles de polígono
+      document.getElementById("polygon-controls").style.display = "none";
+      document.getElementById("polygon-drawing-status").style.display = "none";
+      
+      // Restablecer display de área
+      document.getElementById("polygon-area").textContent = "Área: 0.00 m²";
+      
+      // Actualizar puntero estático
+      updateStaticCrosshair();
+    }
+
+    function finishPolygonDrawing() {
+      if (!drawingPolygon || polygonPoints.length < 3) {
+        cancelPolygonDrawing();
+        return;
+      }
+
+      const id = generateId();
+      const area = calculatePolygonArea(polygonPoints);
+
+      const asset = {
+        id: id,
+        type: "polygon",
+        label: "POLYGON_" + id.substring(0, 4),
+        points: polygonPoints.map(function(p) { return [Number(p.lat.toFixed(6)), Number(p.lng.toFixed(6))]; }),
+        area: area,
+        color: currentPolygonColor,
+        props: {},
+      };
+
+      assets.push(asset);
+
+      // limpiar temporales
+      tempPolygonMarkers.forEach(function(m) { map.removeLayer(m); });
+      tempPolygonLines.forEach(function(l) { map.removeLayer(l); });
+      if (tempPolygon) {
+        map.removeLayer(tempPolygon);
+        tempPolygon = null;
+      }
+      tempPolygonMarkers = [];
+      tempPolygonLines = [];
+      polygonPoints = [];
+      drawingPolygon = false;
+
+      // Ocultar controles de polígono
+      document.getElementById("polygon-controls").style.display = "none";
+      document.getElementById("polygon-drawing-status").style.display = "none";
+
+      document.getElementById("polygon-area").textContent = "Área: 0.00 m²";
+
+      addPolygonToMap(asset);
+      addLabelToAsset(asset);
+      renderAssetsList();
+      updateStats();
+      saveData();
+      selectAsset(id);
+      
+      // Actualizar puntero estático
+      updateStaticCrosshair();
+    }
+
+    function addPolygonToMap(asset) {
+      if (polygons[asset.id]) map.removeLayer(polygons[asset.id]);
+
+      const polygonColor = asset.color || currentPolygonColor;
+      
+      const polygon = L.polygon(asset.points, {
+        color: polygonColor,
+        weight: 2,
+        fillColor: polygonColor,
+        fillOpacity: 0.4, // 40% de opacidad
+      }).addTo(map);
+
+      polygon.on("click", function(e) {
+        // Si no estamos en modo edición, seleccionar el polígono
+        if (!editingPolygon) {
+          selectAsset(asset.id);
+          // Mostrar opción para editar
+          if (confirm('¿Deseas editar este polígono?')) {
+            startPolygonEdit(asset.id);
+          }
+        }
+      });
+
+      const area = asset.area || 0;
+      const homePassedCount = countHomePassedInPolygon(asset);
+      
+      polygon.bindPopup(`
+        <div class="popup-content">
+          <div class="popup-title">${asset.label}</div>
+          <div class="popup-coords">${area.toFixed(2)} m²</div>
+          <div class="popup-coords">HOME PASSED: ${homePassedCount}</div>
+          <div class="popup-actions">
+            <button class="popup-btn" onclick="selectAsset('${asset.id}')">Editar</button>
+            <button class="popup-btn" onclick="startPolygonEdit('${asset.id}')">Editar Vértices</button>
+            <button class="popup-btn" onclick="deleteAsset('${asset.id}')">Eliminar</button>
+          </div>
+        </div>
+      `);
+
+      polygons[asset.id] = polygon;
+      
+      // Aplicar visibilidad
+      if (!assetVisibility[asset.type]) {
+        map.removeLayer(polygon);
+      }
+    }
+
+    function calculatePolygonArea(points) {
+      // Algoritmo para calcular el área de un polígono en metros cuadrados
+      // Usando la fórmula del área del polígono esférico
+      if (points.length < 3) return 0;
+      
+      let area = 0;
+      const R = 6371000; // Radio de la Tierra en metros
+      
+      for (let i = 0; i < points.length; i++) {
+        const p1 = points[i];
+        const p2 = points[(i + 1) % points.length];
+        
+        const lat1 = p1.lat * Math.PI / 180;
+        const lng1 = p1.lng * Math.PI / 180;
+        const lat2 = p2.lat * Math.PI / 180;
+        const lng2 = p2.lng * Math.PI / 180;
+        
+        area += (lng2 - lng1) * (2 + Math.sin(lat1) + Math.sin(lat2));
+      }
+      
+      area = area * R * R / 2;
+      return Math.abs(area);
+    }
+
+    // =========================
+    // Funciones para HOME PASSED
+    // =========================
+    function countHomePassedInPolygon(polygonAsset) {
+      if (!polygonAsset || polygonAsset.type !== 'polygon' || !polygonAsset.points) {
+        return 0;
+      }
+      
+      // Crear un polígono Leaflet para verificar puntos dentro
+      const polygon = L.polygon(polygonAsset.points);
+      
+      // Contar puntos HOME PASSED dentro del polígono
+      let count = 0;
+      assets.forEach(function(asset) {
+        if (asset.type === 'homepassed' && asset.lat && asset.lng) {
+          const point = L.latLng(asset.lat, asset.lng);
+          if (polygon.getBounds().contains(point)) {
+            // Verificación más precisa usando el algoritmo de punto en polígono
+            if (isPointInPolygon([asset.lat, asset.lng], polygonAsset.points)) {
+              count++;
+            }
+          }
+        }
+      });
+      
+      return count;
+    }
+
+    function isPointInPolygon(point, polygon) {
+      // Algoritmo de punto en polígono (ray casting)
+      const x = point[0], y = point[1];
+      let inside = false;
+      
+      for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+        const xi = polygon[i][0], yi = polygon[i][1];
+        const xj = polygon[j][0], yj = polygon[j][1];
+        
+        const intersect = ((yi > y) !== (yj > y)) &&
+          (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
+        
+        if (intersect) inside = !inside;
+      }
+      
+      return inside;
+    }
+
+    // =========================
+    // Funciones para edición de polígonos
+    // =========================
+
+    function startPolygonEdit(polygonId) {
+      const asset = assets.find(function(a) { return a.id === polygonId; });
+      if (!asset || asset.type !== 'polygon') return;
+
+      currentEditingPolygonId = polygonId;
+      editingPolygon = true;
+      
+      // Guardar puntos originales para posible cancelación
+      originalPolygonPoints = [...asset.points];
+      
+      // Ocultar el polígono original
+      if (polygons[polygonId]) {
+        map.removeLayer(polygons[polygonId]);
+      }
+      
+      // Mostrar controles de edición
+      document.getElementById("polygon-edit-controls").style.display = "grid";
+      document.getElementById("polygon-edit-status").style.display = "block";
+      
+      // Crear marcadores para cada vértice
+      createVertexMarkers(asset.points);
+      
+      // Dibujar polígono temporal para edición
+      drawEditingPolygon(asset.points);
+      
+      // Cambiar el comportamiento del click en el mapa
+      map.off('click');
+      map.on('click', handleMapClickDuringEdit);
+    }
+
+    function createVertexMarkers(points) {
+      // Limpiar marcadores anteriores
+      clearVertexMarkers();
+      
+      // Crear marcadores para cada vértice
+      points.forEach(function(point, index) {
+        const marker = L.marker([point[0], point[1]], {
+          icon: L.divIcon({
+            className: 'vertex-marker',
+            iconSize: [12, 12],
+            iconAnchor: [6, 6]
+          }),
+          draggable: true
+        }).addTo(map);
+        
+        marker.on('drag', function(e) {
+          // Actualizar la posición del punto
+          const newPoint = [e.target.getLatLng().lat, e.target.getLatLng().lng];
+          updatePolygonPoint(index, newPoint);
+        });
+        
+        marker.on('contextmenu', function(e) {
+          // Eliminar vértice con click derecho
+          if (points.length > 3) {
+            removePolygonPoint(index);
+          } else {
+            alert('Un polígono debe tener al menos 3 vértices');
+          }
+          e.originalEvent.preventDefault();
+        });
+        
+        vertexMarkers.push(marker);
+        
+        // Crear marcadores de punto medio entre vértices
+        if (index < points.length - 1) {
+          createMidpointMarker(points[index], points[index + 1], index);
+        }
+      });
+      
+      // Punto medio entre el último y el primer vértice
+      if (points.length > 2) {
+        createMidpointMarker(points[points.length - 1], points[0], points.length - 1);
+      }
+    }
+
+    function createMidpointMarker(pointA, pointB, index) {
+      const midLat = (pointA[0] + pointB[0]) / 2;
+      const midLng = (pointA[1] + pointB[1]) / 2;
+      
+      const marker = L.marker([midLat, midLng], {
+        icon: L.divIcon({
+          className: 'midpoint-marker',
+          iconSize: [8, 8],
+          iconAnchor: [4, 4]
+        })
+      }).addTo(map);
+      
+      marker.on('click', function() {
+        // Agregar nuevo vértice en el punto medio
+        addPolygonPointAt(index + 1, [midLat, midLng]);
+      });
+      
+      midpointMarkers.push(marker);
+    }
+
+    function updatePolygonPoint(index, newPoint) {
+      const asset = assets.find(function(a) { return a.id === currentEditingPolygonId; });
+      if (!asset) return;
+      
+      // Actualizar el punto
+      asset.points[index] = [Number(newPoint[0].toFixed(6)), Number(newPoint[1].toFixed(6))];
+      
+      // Redibujar el polígono
+      drawEditingPolygon(asset.points);
+      
+      // Recrear marcadores de puntos medios
+      updateMidpointMarkers(asset.points);
+      
+      // Actualizar área
+      const area = calculatePolygonArea(asset.points.map(function(p) { return {lat: p[0], lng: p[1]}; }));
+      document.getElementById("polygon-area").textContent = "Área: " + area.toFixed(2) + " m²";
+    }
+
+    function addPolygonPointAt(index, point) {
+      const asset = assets.find(function(a) { return a.id === currentEditingPolygonId; });
+      if (!asset) return;
+      
+      // Insertar nuevo punto
+      asset.points.splice(index, 0, [Number(point[0].toFixed(6)), Number(point[1].toFixed(6))]);
+      
+      // Redibujar todo
+      clearVertexMarkers();
+      createVertexMarkers(asset.points);
+      drawEditingPolygon(asset.points);
+      
+      // Actualizar área
+      const area = calculatePolygonArea(asset.points.map(function(p) { return {lat: p[0], lng: p[1]}; }));
+      document.getElementById("polygon-area").textContent = "Área: " + area.toFixed(2) + " m²";
+    }
+
+    function removePolygonPoint(index) {
+      const asset = assets.find(function(a) { return a.id === currentEditingPolygonId; });
+      if (!asset || asset.points.length <= 3) return;
+      
+      // Eliminar punto
+      asset.points.splice(index, 1);
+      
+      // Redibujar todo
+      clearVertexMarkers();
+      createVertexMarkers(asset.points);
+      drawEditingPolygon(asset.points);
+      
+      // Actualizar área
+      const area = calculatePolygonArea(asset.points.map(function(p) { return {lat: p[0], lng: p[1]}; }));
+      document.getElementById("polygon-area").textContent = "Área: " + area.toFixed(2) + " m²";
+    }
+
+    function drawEditingPolygon(points) {
+      // Eliminar polígono temporal anterior si existe
+      if (tempPolygon) {
+        map.removeLayer(tempPolygon);
+      }
+      
+      const asset = assets.find(function(a) { return a.id === currentEditingPolygonId; });
+      const polygonColor = asset ? (asset.color || currentPolygonColor) : currentPolygonColor;
+      
+      // Crear nuevo polígono temporal
+      tempPolygon = L.polygon(points, {
+        color: polygonColor,
+        weight: 2,
+        fillColor: polygonColor,
+        fillOpacity: 0.4,
+        dashArray: '5, 5' // Líneas punteadas para indicar modo edición
+      }).addTo(map);
+    }
+
+    function updateMidpointMarkers(points) {
+      // Eliminar marcadores de puntos medios anteriores
+      midpointMarkers.forEach(function(marker) { map.removeLayer(marker); });
+      midpointMarkers = [];
+      
+      // Crear nuevos marcadores de puntos medios
+      for (let i = 0; i < points.length; i++) {
+        const nextIndex = (i + 1) % points.length;
+        createMidpointMarker(points[i], points[nextIndex], i);
+      }
+    }
+
+    function handleMapClickDuringEdit(e) {
+      if (!editingPolygon) return;
+      
+      // Agregar nuevo vértice en la posición del click
+      const asset = assets.find(function(a) { return a.id === currentEditingPolygonId; });
+      if (!asset) return;
+      
+      // Encontrar el segmento más cercano al click
+      const closestSegmentIndex = findClosestSegment(asset.points, e.latlng);
+      
+      if (closestSegmentIndex !== -1) {
+        const insertIndex = closestSegmentIndex + 1;
+        addPolygonPointAt(insertIndex, [e.latlng.lat, e.latlng.lng]);
+      }
+    }
+
+    function findClosestSegment(points, latlng) {
+      let closestIndex = -1;
+      let minDistance = Infinity;
+      
+      for (let i = 0; i < points.length; i++) {
+        const nextIndex = (i + 1) % points.length;
+        const pointA = L.latLng(points[i][0], points[i][1]);
+        const pointB = L.latLng(points[nextIndex][0], points[nextIndex][1]);
+        
+        const distance = distanceToSegment(latlng, pointA, pointB);
+        
+        if (distance < minDistance) {
+          minDistance = distance;
+          closestIndex = i;
+        }
+      }
+      
+      return closestIndex;
+    }
+
+    function distanceToSegment(point, segmentStart, segmentEnd) {
+      const x = point.lat, y = point.lng;
+      const x1 = segmentStart.lat, y1 = segmentStart.lng;
+      const x2 = segmentEnd.lat, y2 = segmentEnd.lng;
+      
+      const A = x - x1;
+      const B = y - y1;
+      const C = x2 - x1;
+      const D = y2 - y1;
+      
+      const dot = A * C + B * D;
+      const lenSq = C * C + D * D;
+      let param = -1;
+      
+      if (lenSq !== 0) {
+        param = dot / lenSq;
+      }
+      
+      let xx, yy;
+      
+      if (param < 0) {
+        xx = x1;
+        yy = y1;
+      } else if (param > 1) {
+        xx = x2;
+        yy = y2;
+      } else {
+        xx = x1 + param * C;
+        yy = y1 + param * D;
+      }
+      
+      const dx = x - xx;
+      const dy = y - yy;
+      
+      return Math.sqrt(dx * dx + dy * dy);
+    }
+
+    function savePolygonEdit() {
+      if (!editingPolygon || !currentEditingPolygonId) return;
+      
+      const asset = assets.find(function(a) { return a.id === currentEditingPolygonId; });
+      if (!asset) return;
+      
+      // Actualizar el área
+      asset.area = calculatePolygonArea(asset.points.map(function(p) { return {lat: p[0], lng: p[1]}; }));
+      
+      // Limpiar modo edición
+      finishPolygonEdit();
+      
+      // Redibujar el polígono permanente
+      addPolygonToMap(asset);
+      
+      // Actualizar etiqueta
+      if (labelLayers[asset.id]) {
+        map.removeLayer(labelLayers[asset.id]);
+        delete labelLayers[asset.id];
+      }
+      addLabelToAsset(asset);
+      
+      // Guardar datos
+      saveData();
+      
+      alert('Cambios guardados correctamente');
+    }
+
+    function cancelPolygonEdit() {
+      if (!editingPolygon || !currentEditingPolygonId) return;
+      
+      const asset = assets.find(function(a) { return a.id === currentEditingPolygonId; });
+      if (asset) {
+        // Restaurar puntos originales
+        asset.points = [...originalPolygonPoints];
+        asset.area = calculatePolygonArea(asset.points.map(function(p) { return {lat: p[0], lng: p[1]}; }));
+        
+        // Redibujar el polígono permanente
+        addPolygonToMap(asset);
+      }
+      
+      // Limpiar modo edición
+      finishPolygonEdit();
+      
+      alert('Edición cancelada');
+    }
+
+    function finishPolygonEdit() {
+      // Limpiar marcadores
+      clearVertexMarkers();
+      
+      // Eliminar polígono temporal
+      if (tempPolygon) {
+        map.removeLayer(tempPolygon);
+        tempPolygon = null;
+      }
+      
+      // Restaurar comportamiento normal del mapa
+      map.off('click');
+      map.on('click', function(e) {
+        const type = document.getElementById("asset-type-selector").value;
+        if (type === "cab") {
+          if (!drawingCable) {
+            startCableDrawing();
+          }
+          addCablePoint(e.latlng);
+        } else if (type === "polygon") {
+          if (!drawingPolygon) {
+            startPolygonDrawing();
+          }
+          addPolygonPoint(e.latlng);
+        } else {
+          addAsset(e.latlng.lat, e.latlng.lng);
+        }
+      });
+      
+      // Ocultar controles de edición
+      document.getElementById("polygon-edit-controls").style.display = "none";
+      document.getElementById("polygon-edit-status").style.display = "none";
+      
+      editingPolygon = false;
+      currentEditingPolygonId = null;
+      originalPolygonPoints = [];
+    }
+
+    function clearVertexMarkers() {
+      vertexMarkers.forEach(function(marker) { map.removeLayer(marker); });
+      midpointMarkers.forEach(function(marker) { map.removeLayer(marker); });
+      vertexMarkers = [];
+      midpointMarkers = [];
+    }
+
+    // =========================
+    // Control de visibilidad
+    // =========================
+    function updateVisibilityControls() {
+      const container = document.getElementById("visibility-controls");
+      container.innerHTML = "";
+      
+      Object.keys(assetVisibility).forEach(function(type) {
+        const item = document.createElement("div");
+        item.className = "visibility-item";
+        
+        const label = document.createElement("span");
+        label.className = "visibility-label";
+        label.textContent = type.toUpperCase();
+        
+        const switchContainer = document.createElement("label");
+        switchContainer.className = "switch";
+        
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.checked = assetVisibility[type];
+        checkbox.addEventListener("change", function() {
+          assetVisibility[type] = this.checked;
+          applyVisibility();
+          saveData();
+        });
+        
+        const slider = document.createElement("span");
+        slider.className = "slider";
+        
+        switchContainer.appendChild(checkbox);
+        switchContainer.appendChild(slider);
+        
+        item.appendChild(label);
+        item.appendChild(switchContainer);
+        container.appendChild(item);
+      });
+    }
+
+    function applyVisibility() {
+      // Aplicar visibilidad a todos los activos
+      assets.forEach(function(asset) {
+        if (asset.type === "cab" && polylines[asset.id]) {
+          if (assetVisibility[asset.type]) {
+            map.addLayer(polylines[asset.id]);
+          } else {
+            map.removeLayer(polylines[asset.id]);
+          }
+        } else if (asset.type === "polygon" && polygons[asset.id]) {
+          if (assetVisibility[asset.type]) {
+            map.addLayer(polygons[asset.id]);
+          } else {
+            map.removeLayer(polygons[asset.id]);
+          }
+        } else if (markers[asset.id]) {
+          if (assetVisibility[asset.type]) {
+            map.addLayer(markers[asset.id]);
+          } else {
+            map.removeLayer(markers[asset.id]);
+          }
+        }
+        
+        // Aplicar visibilidad a etiquetas
+        if (labelLayers[asset.id]) {
+          if (assetVisibility[asset.type] && showLabels) {
+            map.addLayer(labelLayers[asset.id]);
+          } else {
+            map.removeLayer(labelLayers[asset.id]);
+          }
+        }
+      });
+    }
+
+    // =========================
+    // Selector de tipo de mapa
     // =========================
     function switchMapType(type) {
       if (currentMapType === type) return;
@@ -2503,7 +3496,7 @@ pzo: L.icon({
     function toggleLabels() {
       showLabels = !showLabels;
 
-      Object.values(labelLayers).forEach((layer) => {
+      Object.values(labelLayers).forEach(function(layer) {
         if (showLabels) {
           map.addLayer(layer);
         } else {
@@ -2511,7 +3504,7 @@ pzo: L.icon({
         }
       });
 
-      distanceLabels.forEach((label) => {
+      distanceLabels.forEach(function(label) {
         if (showLabels) {
           map.addLayer(label);
         } else {
@@ -2529,25 +3522,29 @@ pzo: L.icon({
     }
 
     function exportToCSV() {
-      let csvContent = "ID,Tipo,Etiqueta,Latitud,Longitud,Distancia,Instalación,Descripción,Foto\n";
+      let csvContent = "ID,Tipo,Etiqueta,Latitud,Longitud,Distancia,Área,Instalación,Descripción,Foto,HOME_PASSED\n";
 
-      assets.forEach((asset) => {
+      assets.forEach(function(asset) {
         const installationType = asset.installationType === "aerial" ? "Aéreo" : (asset.installationType === "duct" ? "Ducto" : "N/A");
+        const homePassedCount = asset.type === "polygon" ? countHomePassedInPolygon(asset) : "";
+        
         const row = [
           asset.id,
           asset.type,
-          `"${asset.label || ""}"`,
+          '"' + (asset.label || "") + '"',
           asset.lat || "",
           asset.lng || "",
           asset.distance || "",
+          asset.area || "",
           installationType,
-          `"${(asset.props && asset.props.description) || ""}"`,
-          asset.photo ? "Sí" : "No"
+          '"' + ((asset.props && asset.props.description) || "") + '"',
+          asset.photo ? "Sí" : "No",
+          homePassedCount
         ].join(",");
         csvContent += row + "\n";
       });
 
-      const filename = `fibermapper_export_${new Date().toISOString().slice(0, 10)}.csv`;
+      const filename = "fibermapper_export_" + new Date().toISOString().slice(0, 10) + ".csv";
       downloadFile(filename, csvContent, "text/csv;charset=utf-8;");
     }
 
@@ -2566,7 +3563,8 @@ pzo: L.icon({
         fdh: "http://maps.google.com/mapfiles/kml/paddle/C.png",
         ont: "http://maps.google.com/mapfiles/kml/paddle/C.png",
         odf: "http://maps.google.com/mapfiles/kml/paddle/O.png",
-        box: "http://maps.google.com/mapfiles/kml/paddle/B.png"
+        box: "http://maps.google.com/mapfiles/kml/paddle/B.png",
+        homepassed: "http://maps.google.com/mapfiles/kml/paddle/H.png"
       };
 
       // Agregar estilos para activos con foto
@@ -2581,8 +3579,8 @@ pzo: L.icon({
 
       // Añadir marcadores
       assets
-        .filter(asset => asset.type !== "cab")
-        .forEach(asset => {
+        .filter(function(asset) { return asset.type !== "cab" && asset.type !== "polygon"; })
+        .forEach(function(asset) {
           const hasPhoto = asset.photo ? ' styleUrl="#photoStyle"' : '';
           const iconUrl = iconMap[asset.type] || "http://maps.google.com/mapfiles/kml/paddle/wht-blank.png";
           
@@ -2595,8 +3593,8 @@ pzo: L.icon({
             <h3 style="margin: 0 0 10px 0; color: #1e40af;">${escapeXML(asset.label)}</h3>
             <p><strong>Tipo:</strong> ${asset.type}</p>
             <p><strong>Coordenadas:</strong> ${asset.lat}, ${asset.lng}</p>
-            ${asset.props && asset.props.description ? `<p><strong>Descripción:</strong> ${escapeXML(asset.props.description)}</p>` : ''}
-            ${asset.photo ? `<img src="${asset.photo}" style="max-width: 100%; border-radius: 5px; margin-top: 10px;">` : ''}
+            ${asset.props && asset.props.description ? '<p><strong>Descripción:</strong> ' + escapeXML(asset.props.description) + '</p>' : ''}
+            ${asset.photo ? '<img src="' + asset.photo + '" style="max-width: 100%; border-radius: 5px; margin-top: 10px;">' : ''}
           </div>
         ]]>
       </description>
@@ -2615,10 +3613,9 @@ pzo: L.icon({
 
       // Añadir cables (líneas + etiquetas intermedias)
       assets
-        .filter(asset => asset.type === "cab")
-        .forEach(asset => {
+        .filter(function(asset) { return asset.type === "cab"; })
+        .forEach(function(asset) {
           const color = asset.cableType === "fo" ? "ff0000ff" : "ff00aaff"; // Azul FO, cian DROP
-          const dashStyle = asset.installationType === "aerial" ? '          <gx:physicalWidth>2</gx:physicalWidth>' : '';
 
           // Cable completo
           kmlContent += `
@@ -2633,7 +3630,7 @@ pzo: L.icon({
         </LineStyle>
       </Style>
       <LineString>
-        <coordinates>${asset.points.map(p => `${p[1]},${p[0]},0`).join(" ")}</coordinates>
+        <coordinates>${asset.points.map(function(p) { return p[1] + "," + p[0] + ",0"; }).join(" ")}</coordinates>
       </LineString>
     </Placemark>`;
 
@@ -2669,6 +3666,36 @@ pzo: L.icon({
           }
         });
 
+      // Añadir polígonos
+      assets
+        .filter(function(asset) { return asset.type === "polygon"; })
+        .forEach(function(asset) {
+          const color = asset.color ? hexToKMLColor(asset.color) : "ff10b981"; // Verde para polígonos
+          const homePassedCount = countHomePassedInPolygon(asset);
+          
+          kmlContent += `
+    <Placemark>
+      <name>${escapeXML(asset.label)} (${asset.area.toFixed(2)} m²) HP=${homePassedCount}</name>
+      <description>${asset.area.toFixed(2)} metros cuadrados - HOME PASSED: ${homePassedCount}</description>
+      <Style>
+        <LineStyle>
+          <color>${color}</color>
+          <width>2</width>
+        </LineStyle>
+        <PolyStyle>
+          <color>40${color.substring(2)}</color> <!-- 40% de opacidad -->
+        </PolyStyle>
+      </Style>
+      <Polygon>
+        <outerBoundaryIs>
+          <LinearRing>
+            <coordinates>${asset.points.map(function(p) { return p[1] + "," + p[0] + ",0"; }).join(" ")} ${asset.points[0][1]},${asset.points[0][0]},0</coordinates>
+          </LinearRing>
+        </outerBoundaryIs>
+      </Polygon>
+    </Placemark>`;
+        });
+
       kmlContent += `
   </Document>
 </kml>`;
@@ -2681,28 +3708,40 @@ pzo: L.icon({
         // Crear un enlace temporal para descargar el archivo
         const a = document.createElement('a');
         a.href = url;
-        a.download = `fibermapper_export_${new Date().toISOString().slice(0, 10)}.kml`;
+        a.download = "fibermapper_export_" + new Date().toISOString().slice(0, 10) + ".kml";
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
         
         // Esperar un momento antes de abrir WhatsApp para dar tiempo a la descarga
-        setTimeout(() => {
+        setTimeout(function() {
           const text = encodeURIComponent("Te comparto el archivo KML de la infraestructura FTTX");
-          window.open(`https://wa.me/?text=${text}`, '_blank');
+          window.open("https://wa.me/?text=" + text, '_blank');
         }, 1000);
       } else {
         // Descarga normal
-        const filename = `fibermapper_export_${new Date().toISOString().slice(0, 10)}.kml`;
+        const filename = "fibermapper_export_" + new Date().toISOString().slice(0, 10) + ".kml";
         downloadFile(filename, kmlContent, "application/vnd.google-earth.kml+xml;charset=utf-8;");
       }
+    }
+
+    function hexToKMLColor(hex) {
+      // Convertir color HEX a formato KML (AABBGGRR)
+      hex = hex.replace('#', '');
+      if (hex.length === 3) {
+        hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
+      }
+      const r = hex.substring(0, 2);
+      const g = hex.substring(2, 4);
+      const b = hex.substring(4, 6);
+      return "ff" + b + g + r;
     }
 
     function shareViaWhatsApp(format) {
       if (format === "csv") {
         const csvContent = generateCSVContent();
         const text = encodeURIComponent("Datos Fiber Mapper:\n" + csvContent);
-        window.open(`https://wa.me/?text=${text}`, '_blank');
+        window.open("https://wa.me/?text=" + text, '_blank');
       } else if (format === "kml") {
         // Para KML, necesitamos crear un archivo temporal
         exportToKML(true);
@@ -2710,338 +3749,274 @@ pzo: L.icon({
     }
 
     function generateCSVContent() {
-      let csvContent = "ID,Tipo,Etiqueta,Latitud,Longitud,Distancia,Instalación,Descripción,Foto\n";
-      assets.forEach((asset) => {
+      let csvContent = "ID,Tipo,Etiqueta,Latitud,Longitud,Distancia,Área,Instalación,Descripción,Foto,HOME_PASSED\n";
+      assets.forEach(function(asset) {
         const installationType = asset.installationType === "aerial" ? "Aéreo" : (asset.installationType === "duct" ? "Ducto" : "N/A");
+        const homePassedCount = asset.type === "polygon" ? countHomePassedInPolygon(asset) : "";
+        
         const row = [
           asset.id,
           asset.type,
-          `"${asset.label || ""}"`,
+          '"' + (asset.label || "") + '"',
           asset.lat || "",
           asset.lng || "",
           asset.distance || "",
+          asset.area || "",
           installationType,
-          `"${(asset.props && asset.props.description) || ""}"`,
-          asset.photo ? "Sí" : "No"
+          '"' + ((asset.props && asset.props.description) || "") + '"',
+          asset.photo ? "Sí" : "No",
+          homePassedCount
         ].join(",");
         csvContent += row + "\n";
       });
       return csvContent;
     }
 
-     function importCSV(content) {
-    try {
-        const lines = content.split('\n').filter(line => line.trim() !== '');
-        if (lines.length < 2) {
-            alert('El archivo CSV está vacío o no tiene datos válidos');
-            return;
-        }
-
-        // Obtener headers
-        const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
-        
-        // Validar headers básicos
-        const requiredHeaders = ['Tipo', 'Latitud', 'Longitud'];
-        const missingHeaders = requiredHeaders.filter(h => !headers.includes(h));
-        if (missingHeaders.length > 0) {
-            alert(`Faltan headers requeridos: ${missingHeaders.join(', ')}`);
-            return;
-        }
-
-        let importedCount = 0;
-        let errorCount = 0;
-
-        // Procesar cada línea
-        for (let i = 1; i < lines.length; i++) {
-            try {
-                const line = lines[i];
-                const values = parseCSVLine(line);
-                
-                if (values.length < headers.length) continue;
-
-                const row = {};
-                headers.forEach((header, index) => {
-                    row[header] = values[index] ? values[index].trim().replace(/"/g, '') : '';
-                });
-
-                // Validar datos mínimos
-                const type = row['Tipo'];
-                const lat = parseFloat(row['Latitud']);
-                const lng = parseFloat(row['Longitud']);
-
-                if (!type || isNaN(lat) || isNaN(lng)) {
-                    errorCount++;
-                    console.warn(`Línea ${i + 1}: Datos inválidos`, row);
-                    continue;
-                }
-
-                // Preparar propiedades
-                const props = {};
-                if (row['Descripción']) {
-                    props.description = row['Descripción'];
-                }
-
-                let photo = null;
-                if (row['Foto'] && row['Foto'].toLowerCase() === 'sí') {
-                    // Para fotos, necesitaríamos manejar archivos separados
-                    console.log(`Línea ${i + 1}: Asset con foto - manejar separadamente`);
-                }
-
-                // Determinar cableType si es un cable
-                let cableType = null;
-                let installationType = null;
-                let points = null;
-                let distance = 0;
-
-                if (type === 'cab') {
-                    cableType = row['CableType'] || 'fo';
-                    installationType = row['Instalación'] === 'Ducto' ? 'duct' : 'aerial';
-                    
-                    // Para cables, necesitamos manejar puntos específicos
-                    if (row['Puntos']) {
-                        try {
-                            points = JSON.parse(row['Puntos']);
-                        } catch (e) {
-                            console.warn(`Línea ${i + 1}: Error parsing puntos`, e);
-                        }
-                    }
-                    
-                    distance = parseFloat(row['Distancia']) || 0;
-                }
-
-                // Crear el asset
-                if (type === 'cab' && points && points.length > 1) {
-                    // Es un cable con puntos definidos
-                    const asset = {
-                        id: row['ID'] || generateId(),
-                        type: 'cab',
-                        cableType: cableType,
-                        installationType: installationType,
-                        label: row['Etiqueta'] || `CAB_${generateId().substring(0, 4)}`,
-                        points: points,
-                        distance: distance,
-                        props: props
-                    };
-                    assets.push(asset);
-                    addCableToMap(asset);
-                } else {
-                    // Es un activo normal
-                    addAsset(lat, lng, row['Etiqueta'], type, photo, row['Descripción']);
-                }
-
-                importedCount++;
-
-            } catch (error) {
-                errorCount++;
-                console.error(`Error en línea ${i + 1}:`, error);
-            }
-        }
-
-        // Actualizar UI
-        renderAssetsList();
-        updateStats();
-        calculateCableTotals();
-        saveData();
-
-        alert(`Importación completada:\n✅ ${importedCount} activos importados\n❌ ${errorCount} errores`);
-
-    } catch (error) {
-        console.error('Error en importación CSV:', error);
-        alert('Error al importar el archivo CSV: ' + error.message);
-    }
-}
-
-// Función auxiliar para parsear líneas CSV correctamente
-function parseCSVLine(line) {
-    const result = [];
-    let current = '';
-    let inQuotes = false;
-    
-    for (let i = 0; i < line.length; i++) {
-        const char = line[i];
-        
-        if (char === '"') {
-            inQuotes = !inQuotes;
-        } else if (char === ',' && !inQuotes) {
-            result.push(current);
-            current = '';
-        } else {
-            current += char;
-        }
-    }
-    
-    result.push(current);
-    return result;
-}
-
+    // =========================
+    // Importación de datos - CORREGIDA
+    // =========================
     function importKML(content) {
-    try {
+      try {
         const parser = new DOMParser();
-        const xmlDoc = parser.parseFromString(content, 'text/xml');
+        const xmlDoc = parser.parseFromString(content, "text/xml");
         
-        // Verificar errores de parsing
-        const parseError = xmlDoc.getElementsByTagName('parsererror');
+        // Verificar si hay errores en el XML
+        const parseError = xmlDoc.getElementsByTagName("parsererror");
         if (parseError.length > 0) {
-            throw new Error('El archivo KML no es válido');
+          alert("Error al parsear el archivo KML: " + parseError[0].textContent);
+          return;
         }
-
-        const placemarks = xmlDoc.getElementsByTagName('Placemark');
+        
+        // Procesar Placemarks
+        const placemarks = xmlDoc.getElementsByTagName("Placemark");
         let importedCount = 0;
-        let errorCount = 0;
-
-        for (let placemark of placemarks) {
-            try {
-                // Obtener nombre
-                const nameElement = placemark.getElementsByTagName('name')[0];
-                const name = nameElement ? nameElement.textContent.trim() : '';
-
-                // Obtener descripción
-                const descriptionElement = placemark.getElementsByTagName('description')[0];
-                let description = '';
-                if (descriptionElement) {
-                    // Extraer texto limpio de la descripción (sin HTML)
-                    const tempDiv = document.createElement('div');
-                    tempDiv.innerHTML = descriptionElement.textContent;
-                    description = tempDiv.textContent || tempDiv.innerText || '';
-                }
-
-                // Determinar tipo por el nombre o descripción
-                let type = determineAssetType(name, description);
+        
+        for (let i = 0; i < placemarks.length; i++) {
+          const placemark = placemarks[i];
+          
+          // Obtener nombre
+          const nameElement = placemark.getElementsByTagName("name")[0];
+          const name = nameElement ? nameElement.textContent : "IMPORT_" + (i+1);
+          
+          // Obtener descripción
+          const descElement = placemark.getElementsByTagName("description")[0];
+          let description = "";
+          if (descElement) {
+            description = descElement.textContent;
+          }
+          
+          // Determinar el tipo basado en el nombre o geometría
+          let assetType = "poste"; // valor por defecto
+          
+          // Detectar tipo por nombre
+          const nameUpper = name.toUpperCase();
+          if (nameUpper.includes("NAP")) assetType = "nap";
+          else if (nameUpper.includes("POSTE")) assetType = "poste";
+          else if (nameUpper.includes("CABLE") || nameUpper.includes("CAB")) assetType = "cab";
+          else if (nameUpper.includes("FAT")) assetType = "fat";
+          else if (nameUpper.includes("OLT")) assetType = "olt";
+          else if (nameUpper.includes("FDH")) assetType = "fdh";
+          else if (nameUpper.includes("EMP")) assetType = "emp";
+          else if (nameUpper.includes("POZO") || nameUpper.includes("PZO")) assetType = "pzo";
+          else if (nameUpper.includes("ONT")) assetType = "ont";
+          else if (nameUpper.includes("ODF")) assetType = "odf";
+          else if (nameUpper.includes("BOX")) assetType = "box";
+          else if (nameUpper.includes("POLYGON") || nameUpper.includes("POLIGONO")) assetType = "polygon";
+          else if (nameUpper.includes("HOME") || nameUpper.includes("HP")) assetType = "homepassed";
+          
+          // Procesar geometrías
+          const point = placemark.getElementsByTagName("Point")[0];
+          const lineString = placemark.getElementsByTagName("LineString")[0];
+          const polygonElement = placemark.getElementsByTagName("Polygon")[0];
+          
+          if (point) {
+            // Es un punto
+            const coordsElement = point.getElementsByTagName("coordinates")[0];
+            if (coordsElement) {
+              const coords = coordsElement.textContent.trim().split(",");
+              if (coords.length >= 2) {
+                const lng = parseFloat(coords[0]);
+                const lat = parseFloat(coords[1]);
                 
-                // Buscar coordenadas
-                const coordinates = getCoordinatesFromPlacemark(placemark);
-                
-                if (!coordinates) {
-                    errorCount++;
-                    continue;
+                if (!isNaN(lat) && !isNaN(lng)) {
+                  addAsset(lat, lng, name, assetType, null, description);
+                  importedCount++;
                 }
-
-                // Crear asset basado en el tipo de geometría
-                if (coordinates.points && coordinates.points.length > 1) {
-                    // Es una línea (cable)
-                    const asset = {
-                        id: generateId(),
-                        type: 'cab',
-                        cableType: 'fo', // Por defecto
-                        installationType: 'aerial', // Por defecto
-                        label: name || `CAB_${generateId().substring(0, 4)}`,
-                        points: coordinates.points,
-                        distance: calculateTotalDistance(coordinates.points),
-                        props: { description: description }
-                    };
-                    assets.push(asset);
-                    addCableToMap(asset);
-                } else if (coordinates.point) {
-                    // Es un punto (activo normal)
-                    addAsset(
-                        coordinates.point.lat, 
-                        coordinates.point.lng, 
-                        name, 
-                        type, 
-                        null, 
-                        description
-                    );
-                }
-
-                importedCount++;
-
-            } catch (error) {
-                errorCount++;
-                console.error('Error procesando placemark:', error);
+              }
             }
-        }
-
-        // Actualizar UI
-        renderAssetsList();
-        updateStats();
-        calculateCableTotals();
-        saveData();
-
-        alert(`Importación KML completada:\n✅ ${importedCount} elementos importados\n❌ ${errorCount} errores`);
-
-    } catch (error) {
-        console.error('Error en importación KML:', error);
-        alert('Error al importar el archivo KML: ' + error.message);
-    }
-}
-
-// Función auxiliar para determinar el tipo de asset
-function determineAssetType(name, description) {
-    const lowerName = name.toLowerCase();
-    const lowerDesc = description.toLowerCase();
-
-    const typePatterns = {
-        'poste': ['poste', 'pole', 'post'],
-        'nap': ['nap', 'punto de acceso'],
-        'fat': ['fat', 'flex point'],
-        'olt': ['olt'],
-        'n1': ['n1', 'n-1', 'bal'],
-        'emp': ['emp', 'empalme'],
-        'pzo': ['pzo', 'pozo'],
-        'ont': ['ont'],
-        'odf': ['odf'],
-        'box': ['box', 'hubbox', 'caja']
-    };
-
-    for (const [type, patterns] of Object.entries(typePatterns)) {
-        for (const pattern of patterns) {
-            if (lowerName.includes(pattern) || lowerDesc.includes(pattern)) {
-                return type;
-            }
-        }
-    }
-
-    return 'poste'; // Tipo por defecto
-}
-
-// Función auxiliar para extraer coordenadas de un placemark
-function getCoordinatesFromPlacemark(placemark) {
-    // Buscar Point
-    const pointElement = placemark.getElementsByTagName('Point')[0];
-    if (pointElement) {
-        const coordElement = pointElement.getElementsByTagName('coordinates')[0];
-        if (coordElement) {
-            const coords = coordElement.textContent.trim().split(',');
-            if (coords.length >= 2) {
-                return {
-                    point: {
-                        lng: parseFloat(coords[0]),
-                        lat: parseFloat(coords[1])
-                    }
-                };
-            }
-        }
-    }
-
-    // Buscar LineString
-    const lineStringElement = placemark.getElementsByTagName('LineString')[0];
-    if (lineStringElement) {
-        const coordElement = lineStringElement.getElementsByTagName('coordinates')[0];
-        if (coordElement) {
-            const points = [];
-            const coordLines = coordElement.textContent.trim().split(' ');
-            
-            for (const coordLine of coordLines) {
-                const coords = coordLine.split(',');
+          } else if (lineString) {
+            // Es una línea (cable)
+            const coordsElement = lineString.getElementsByTagName("coordinates")[0];
+            if (coordsElement) {
+              const coordPairs = coordsElement.textContent.trim().split(" ");
+              const points = [];
+              
+              for (let j = 0; j < coordPairs.length; j++) {
+                const coords = coordPairs[j].split(",");
                 if (coords.length >= 2) {
-                    points.push([
-                        parseFloat(coords[1]), // lat
-                        parseFloat(coords[0])  // lng
-                    ]);
+                  const lng = parseFloat(coords[0]);
+                  const lat = parseFloat(coords[1]);
+                  
+                  if (!isNaN(lat) && !isNaN(lng)) {
+                    points.push([lat, lng]);
+                  }
                 }
+              }
+              
+              if (points.length >= 2) {
+                const id = generateId();
+                const totalDistance = calculateTotalDistance(points.map(function(p) { return {lat: p[0], lng: p[1]}; }));
+                
+                const asset = {
+                  id: id,
+                  type: "cab",
+                  cableType: "fo", // Por defecto
+                  installationType: "aerial", // Por defecto
+                  label: name,
+                  points: points,
+                  distance: totalDistance,
+                  props: { description: description },
+                };
+                
+                assets.push(asset);
+                addCableToMap(asset);
+                addLabelToAsset(asset);
+                importedCount++;
+              }
             }
-            
-            if (points.length > 1) {
-                return { points: points };
+          } else if (polygonElement) {
+            // Es un polígono - CORREGIDO
+            const outerBoundary = polygonElement.getElementsByTagName("outerBoundaryIs")[0];
+            if (outerBoundary) {
+              const linearRing = outerBoundary.getElementsByTagName("LinearRing")[0];
+              if (linearRing) {
+                const coordsElement = linearRing.getElementsByTagName("coordinates")[0];
+                if (coordsElement) {
+                  const coordPairs = coordsElement.textContent.trim().split(" ");
+                  const points = [];
+                  
+                  for (let j = 0; j < coordPairs.length; j++) {
+                    const coords = coordPairs[j].split(",");
+                    if (coords.length >= 2) {
+                      const lng = parseFloat(coords[0]);
+                      const lat = parseFloat(coords[1]);
+                      
+                      if (!isNaN(lat) && !isNaN(lng)) {
+                        points.push([lat, lng]);
+                      }
+                    }
+                  }
+                  
+                  // Eliminar el último punto si es igual al primero (cierre del polígono)
+                  if (points.length > 0 && 
+                      points[0][0] === points[points.length-1][0] && 
+                      points[0][1] === points[points.length-1][1]) {
+                    points.pop();
+                  }
+                  
+                  if (points.length >= 3) {
+                    const id = generateId();
+                    const area = calculatePolygonArea(points.map(function(p) { return {lat: p[0], lng: p[1]}; }));
+                    
+                    const asset = {
+                      id: id,
+                      type: "polygon",
+                      label: name,
+                      points: points,
+                      area: area,
+                      color: currentPolygonColor,
+                      props: { description: description },
+                    };
+                    
+                    assets.push(asset);
+                    addPolygonToMap(asset);
+                    addLabelToAsset(asset);
+                    importedCount++;
+                  }
+                }
+              }
             }
+          }
         }
+        
+        if (importedCount > 0) {
+          renderAssetsList();
+          updateStats();
+          calculateCableTotals();
+          saveData();
+          alert("Se importaron " + importedCount + " elementos correctamente.");
+        } else {
+          alert("No se encontraron elementos válidos para importar en el archivo KML.");
+        }
+      } catch (error) {
+        console.error("Error importando KML:", error);
+        alert("Error al importar el archivo KML: " + error.message);
+      }
     }
 
-    return null;
-}
+    function importCSV(content) {
+      try {
+        const lines = content.split('\n');
+        let importedCount = 0;
+        
+        // Saltar la primera línea (encabezados)
+        for (let i = 1; i < lines.length; i++) {
+          const line = lines[i].trim();
+          if (!line) continue;
+          
+          // Manejar campos entre comillas que pueden contener comas
+          const fields = [];
+          let currentField = '';
+          let inQuotes = false;
+          
+          for (let j = 0; j < line.length; j++) {
+            const char = line[j];
+            
+            if (char === '"') {
+              inQuotes = !inQuotes;
+            } else if (char === ',' && !inQuotes) {
+              fields.push(currentField);
+              currentField = '';
+            } else {
+              currentField += char;
+            }
+          }
+          fields.push(currentField); // Último campo
+          
+          if (fields.length >= 5) {
+            const id = generateId();
+            const type = fields[1] || "poste";
+            const label = fields[2] ? fields[2].replace(/^"|"$/g, '') : type + "_" + i;
+            const lat = parseFloat(fields[3]);
+            const lng = parseFloat(fields[4]);
+            
+            if (!isNaN(lat) && !isNaN(lng)) {
+              // Para polígonos en CSV, necesitamos un formato especial
+              if (type === "polygon") {
+                // En CSV los polígonos necesitan un formato especial con todos los puntos
+                // Por ahora, importamos como punto y el usuario puede convertirlo a polígono
+                addAsset(lat, lng, label, "poste"); // Importar como poste por defecto
+              } else {
+                addAsset(lat, lng, label, type);
+              }
+              importedCount++;
+            }
+          }
+        }
+        
+        if (importedCount > 0) {
+          alert("Se importaron " + importedCount + " elementos correctamente.");
+        } else {
+          alert("No se encontraron elementos válidos para importar en el archivo CSV.");
+        }
+      } catch (error) {
+        console.error("Error importando CSV:", error);
+        alert("Error al importar el archivo CSV: " + error.message);
+      }
+    }
 
     // =========================
-    // Clear All Data - CORREGIDO
+    // Clear All Data
     // =========================
     function clearAllData() {
       if (!confirm("¿Estás seguro de que deseas eliminar todos los datos? Esta acción no se puede deshacer.")) {
@@ -3049,28 +4024,42 @@ function getCoordinatesFromPlacemark(placemark) {
       }
 
       // Eliminar todos los marcadores
-      Object.values(markers).forEach(marker => map.removeLayer(marker));
+      Object.values(markers).forEach(function(marker) { map.removeLayer(marker); });
       markers = {};
 
       // Eliminar todas las polilíneas
-      Object.values(polylines).forEach(polyline => map.removeLayer(polyline));
+      Object.values(polylines).forEach(function(polyline) { map.removeLayer(polyline); });
       polylines = {};
 
+      // Eliminar todos los polígonos
+      Object.values(polygons).forEach(function(polygon) { map.removeLayer(polygon); });
+      polygons = {};
+
       // Eliminar todas las etiquetas
-      Object.values(labelLayers).forEach(label => map.removeLayer(label));
+      Object.values(labelLayers).forEach(function(label) { map.removeLayer(label); });
       labelLayers = {};
 
       // Eliminar etiquetas de distancia
-      distanceLabels.forEach(label => map.removeLayer(label));
+      distanceLabels.forEach(function(label) { map.removeLayer(label); });
       distanceLabels = [];
 
       // Limpiar arrays temporales
-      tempMarkers.forEach(m => map.removeLayer(m));
-      tempPolylines.forEach(l => map.removeLayer(l));
+      tempMarkers.forEach(function(m) { map.removeLayer(m); });
+      tempPolylines.forEach(function(l) { map.removeLayer(l); });
+      tempPolygonMarkers.forEach(function(m) { map.removeLayer(m); });
+      tempPolygonLines.forEach(function(l) { map.removeLayer(l); });
+      if (tempPolygon) {
+        map.removeLayer(tempPolygon);
+        tempPolygon = null;
+      }
       tempMarkers = [];
       tempPolylines = [];
+      tempPolygonMarkers = [];
+      tempPolygonLines = [];
       cablePoints = [];
+      polygonPoints = [];
       drawingCable = false;
+      drawingPolygon = false;
       
       // Limpiar ubicación actual
       clearCurrentLocation();
@@ -3080,7 +4069,7 @@ function getCoordinatesFromPlacemark(placemark) {
       selectedAssetId = null;
 
       // Reiniciar contadores
-      Object.keys(assetCounters).forEach(key => {
+      Object.keys(assetCounters).forEach(function(key) {
         assetCounters[key] = 0;
       });
 
@@ -3090,6 +4079,7 @@ function getCoordinatesFromPlacemark(placemark) {
       calculateCableTotals();
       updateDistanceDisplay(0);
       document.getElementById("segment-distance").textContent = "Último segmento: 0.00 metros";
+      document.getElementById("polygon-area").textContent = "Área: 0.00 m²";
 
       // Limpiar localStorage
       localStorage.removeItem("fibermapper_assets");
@@ -3121,13 +4111,13 @@ function getCoordinatesFromPlacemark(placemark) {
       document.getElementById("gps-status").textContent = "Obteniendo ubicación...";
 
       navigator.geolocation.getCurrentPosition(
-        (position) => {
+        function(position) {
           const lat = position.coords.latitude;
           const lng = position.coords.longitude;
           const accuracy = position.coords.accuracy;
 
           document.getElementById("gps-status").textContent = 
-            `Precisión: ±${accuracy.toFixed(1)} metros`;
+            "Precisión: ±" + accuracy.toFixed(1) + " metros";
 
           // Centrar mapa en la ubicación
           map.setView([lat, lng], 18);
@@ -3140,21 +4130,22 @@ function getCoordinatesFromPlacemark(placemark) {
             fillOpacity: 0.7
           }).addTo(map);
 
-          setTimeout(() => {
+          setTimeout(function() {
             map.removeLayer(marker);
           }, 5000);
 
           // Confirmar para agregar activo
-          if (confirm(`¿Agregar activo en esta ubicación? (Precisión: ±${accuracy.toFixed(1)}m)`)) {
+          if (confirm("¿Agregar activo en esta ubicación? (Precisión: ±" + accuracy.toFixed(1) + "m)")) {
             const type = document.getElementById("gps-type").value;
             const label = document.getElementById("gps-label").value || 
-                         `${type.toUpperCase()}_GPS_${new Date().getTime().toString().slice(-4)}`;
+                         type.toUpperCase() + "_GPS_" + new Date().getTime().toString().slice(-4);
             
             document.getElementById("asset-type-selector").value = type;
             
-            // Si es NAP, abrir modal de edición
-            if (type === "nap") {
-              openNapModal({ lat, lng });
+            if (type === "polygon") {
+              // Para polígonos, iniciar dibujo
+              startPolygonDrawing();
+              addPolygonPoint({ lat: lat, lng: lng });
             } else {
               addAsset(lat, lng);
             }
@@ -3162,7 +4153,7 @@ function getCoordinatesFromPlacemark(placemark) {
             closeGpsModal();
           }
         },
-        (error) => {
+        function(error) {
           let errorMsg = "Error al obtener la ubicación: ";
           switch(error.code) {
             case error.PERMISSION_DENIED:
@@ -3203,35 +4194,48 @@ function getCoordinatesFromPlacemark(placemark) {
     }
 
     // =========================
-    // Inicialización y Event Listeners - CORREGIDO
+    // Inicialización y Event Listeners
     // =========================
     document.addEventListener("DOMContentLoaded", function() {
+      console.log("DOM cargado, inicializando aplicación...");
       initMap();
       loadSavedData();
 
       // Selector de tipo de mapa
-      document.getElementById("standard-map-btn").addEventListener("click", () => switchMapType("standard"));
-      document.getElementById("satellite-map-btn").addEventListener("click", () => switchMapType("satellite"));
-      document.getElementById("googleearth-map-btn").addEventListener("click", () => switchMapType("googleearth"));
+      document.getElementById("standard-map-btn").addEventListener("click", function() { switchMapType("standard"); });
+      document.getElementById("satellite-map-btn").addEventListener("click", function() { switchMapType("satellite"); });
+      document.getElementById("googleearth-map-btn").addEventListener("click", function() { switchMapType("googleearth"); });
 
       // Selector de tipo de activo - actualizar puntero estático cuando cambie
       document.getElementById("asset-type-selector").addEventListener("change", updateStaticCrosshair);
 
       // Selector de tipo de cable
-      document.querySelectorAll(".cable-option").forEach(option => {
+      var cableOptions = document.querySelectorAll(".cable-option");
+      cableOptions.forEach(function(option) {
         option.addEventListener("click", function() {
-          document.querySelectorAll(".cable-option").forEach(opt => opt.classList.remove("selected"));
+          cableOptions.forEach(function(opt) { opt.classList.remove("selected"); });
           this.classList.add("selected");
           currentCableType = this.getAttribute("data-type");
         });
       });
 
       // Selector de tipo de instalación de cable
-      document.querySelectorAll(".cable-installation-option").forEach(option => {
+      var installationOptions = document.querySelectorAll(".cable-installation-option");
+      installationOptions.forEach(function(option) {
         option.addEventListener("click", function() {
-          document.querySelectorAll(".cable-installation-option").forEach(opt => opt.classList.remove("selected"));
+          installationOptions.forEach(function(opt) { opt.classList.remove("selected"); });
           this.classList.add("selected");
           currentCableInstallation = this.getAttribute("data-installation");
+        });
+      });
+
+      // Paleta de colores para polígonos
+      var colorOptions = document.querySelectorAll(".color-option");
+      colorOptions.forEach(function(option) {
+        option.addEventListener("click", function() {
+          colorOptions.forEach(function(opt) { opt.classList.remove("selected"); });
+          this.classList.add("selected");
+          currentPolygonColor = this.getAttribute("data-color");
         });
       });
 
@@ -3241,7 +4245,7 @@ function getCoordinatesFromPlacemark(placemark) {
       // Botón para expandir/contraer panel lateral
       document.getElementById("sidebar-toggle").addEventListener("click", toggleSidebar);
 
-      // Botones de control del mapa - CORREGIDO
+      // Botones de control del mapa
       document.getElementById("locate-me-btn").addEventListener("click", function() {
         toggleLocationTracking();
       });
@@ -3290,7 +4294,7 @@ function getCoordinatesFromPlacemark(placemark) {
         if (selectedAssetId) {
           try {
             const props = JSON.parse(this.value);
-            updateAsset(selectedAssetId, { props });
+            updateAsset(selectedAssetId, { props: props });
           } catch (e) {
             alert("Error en el formato JSON: " + e.message);
           }
@@ -3322,18 +4326,53 @@ function getCoordinatesFromPlacemark(placemark) {
         
         const type = document.getElementById("asset-type-selector").value;
         
-        // Si es NAP, abrir modal de edición
-        if (type === "nap") {
-          openNapModal({ lat, lng });
+        if (type === "polygon") {
+          if (!drawingPolygon) {
+            startPolygonDrawing();
+          }
+          addPolygonPoint({ lat: lat, lng: lng });
         } else {
           addAsset(lat, lng);
         }
+      });
+
+      // Agregar vértice de polígono manual con coordenadas
+      document.getElementById("add-manual-polygon-point").addEventListener("click", function() {
+        const lat = parseFloat(document.getElementById("manual-polygon-lat").value);
+        const lng = parseFloat(document.getElementById("manual-polygon-lng").value);
+        
+        if (isNaN(lat) || isNaN(lng)) {
+          alert("Por favor ingresa coordenadas válidas");
+          return;
+        }
+        
+        if (!drawingPolygon) {
+          startPolygonDrawing();
+        }
+        addPolygonPoint({ lat: lat, lng: lng });
       });
 
       // Controles de cable
       document.getElementById("undo-cable-point").addEventListener("click", undoLastCablePoint);
       document.getElementById("cancel-cable-drawing").addEventListener("click", cancelCableDrawing);
       document.getElementById("finish-cable-drawing").addEventListener("click", finishCableDrawing);
+
+      // Controles de polígono
+      document.getElementById("undo-polygon-point").addEventListener("click", undoLastPolygonPoint);
+      document.getElementById("cancel-polygon-drawing").addEventListener("click", cancelPolygonDrawing);
+      document.getElementById("finish-polygon-drawing").addEventListener("click", finishPolygonDrawing);
+
+      // Controles de edición de polígonos - CORREGIDOS
+      document.getElementById("add-polygon-vertex").addEventListener("click", function() {
+        if (editingPolygon) {
+          // Cambiar mensaje para indicar modo de agregar vértices
+          document.getElementById("polygon-edit-status").textContent = 
+            "Haz clic en cualquier segmento del polígono para agregar un vértice";
+        }
+      });
+      
+      document.getElementById("cancel-polygon-edit").addEventListener("click", cancelPolygonEdit);
+      document.getElementById("save-polygon-edit").addEventListener("click", savePolygonEdit);
 
       // Limpiar pantalla
       document.getElementById("clear-screen").addEventListener("click", clearAllData);
@@ -3343,14 +4382,16 @@ function getCoordinatesFromPlacemark(placemark) {
       document.getElementById("export-data").addEventListener("click", openExportModal);
       document.getElementById("close-export").addEventListener("click", closeExportModal);
 
-      document.querySelectorAll(".export-option").forEach(option => {
+      var exportOptions = document.querySelectorAll(".export-option");
+      exportOptions.forEach(function(option) {
         option.addEventListener("click", function() {
           selectedExportFormat = this.getAttribute("data-format");
           document.getElementById("share-options-container").style.display = "block";
         });
       });
 
-      document.querySelectorAll(".share-option").forEach(option => {
+      var shareOptions = document.querySelectorAll(".share-option");
+      shareOptions.forEach(function(option) {
         option.addEventListener("click", function() {
           const action = this.getAttribute("data-action");
           if (action === "save" && selectedExportFormat) {
@@ -3390,11 +4431,6 @@ function getCoordinatesFromPlacemark(placemark) {
         getCurrentLocation(highAccuracy);
       });
 
-      // NAP Modal
-      document.getElementById("nap-photo").addEventListener("change", handleNapPhotoUpload);
-      document.getElementById("nap-cancel").addEventListener("click", closeNapModal);
-      document.getElementById("nap-confirm").addEventListener("click", saveNap);
-
       // Photo Modal
       document.getElementById("camera-input").addEventListener("change", function(e) {
         handlePhotoUpload(e, true);
@@ -3418,11 +4454,15 @@ function getCoordinatesFromPlacemark(placemark) {
       
       // Inicializar puntero estático
       updateStaticCrosshair();
+      
+      // Inicializar controles de visibilidad
+      updateVisibilityControls();
+      
+      console.log("Aplicación inicializada correctamente");
     });
   </script>
 </body>
 </html>
-
 
 
 
