@@ -1934,108 +1934,119 @@ pzo: L.icon({
     // Activos (puntos)
     // =========================
     function addAsset(lat, lng, label, type, photo, description) {
-      const assetType = type || document.getElementById("asset-type-selector").value;
-      
-      // Si no es cable ni polígono, generar numeración automática
-      if (assetType !== "cab" && assetType !== "polygon") {
-        assetCounters[assetType] = (assetCounters[assetType] || 0) + 1;
-      }
-      
-      const id = generateId();
-      const assetLabel = label || assetType.toUpperCase() + "_" + assetCounters[assetType];
+  const assetType = type || document.getElementById("asset-type-selector").value;
+  
+  // Si no es cable, polígono ni homepassed, generar numeración automática
+  if (assetType !== "cab" && assetType !== "polygon" && assetType !== "homepassed") {
+    assetCounters[assetType] = (assetCounters[assetType] || 0) + 1;
+  }
 
-      const asset = {
-        id: id,
-        type: assetType,
-        label: assetLabel,
-        lat: Number(lat.toFixed(6)),
-        lng: Number(lng.toFixed(6)),
-        props: {
-          description: description || ""
-        },
-      };
+  const id = generateId();
+  let assetLabel;
 
-      // Agregar foto si está disponible
-      if (photo) {
-        asset.photo = photo;
-      }
+  // Etiqueta especial para Home Passed
+  if (assetType === "homepassed") {
+    assetLabel = "HP";
+  } else {
+    assetLabel = label || assetType.toUpperCase() + "_" + assetCounters[assetType];
+  }
 
-      assets.push(asset);
-      
-      if (assetType === "polygon") {
-        // Para polígonos, no agregamos marcador, se maneja diferente
-      } else {
-        addMarker(asset);
-      }
-      
-      addLabelToAsset(asset);
-      renderAssetsList();
-      updateStats();
-      saveData();
-      selectAsset(id);
-      
-      return asset;
-    }
+  const asset = {
+    id: id,
+    type: assetType,
+    label: assetLabel,
+    lat: Number(lat.toFixed(6)),
+    lng: Number(lng.toFixed(6)),
+    props: {
+      description: description || ""
+    },
+  };
+
+  // Agregar foto si está disponible
+  if (photo) {
+    asset.photo = photo;
+  }
+
+  assets.push(asset);
+  
+  if (assetType === "polygon") {
+    // Para polígonos, no agregamos marcador, se maneja diferente
+  } else {
+    addMarker(asset);
+  }
+  
+  addLabelToAsset(asset);
+  renderAssetsList();
+  updateStats();
+  saveData();
+  selectAsset(id);
+  
+  return asset;
+}
+
 
     function addMarker(asset) {
-      if (markers[asset.id]) map.removeLayer(markers[asset.id]);
+  if (markers[asset.id]) map.removeLayer(markers[asset.id]);
 
-      const icon = ICONS[asset.type] || ICONS.default;
+  const icon = ICONS[asset.type] || ICONS.default;
 
-      const marker = L.marker([asset.lat, asset.lng], {
-        draggable: true,
-        icon: icon,
-      }).addTo(map);
+  const marker = L.marker([asset.lat, asset.lng], {
+    draggable: true,
+    icon: icon,
+  }).addTo(map);
 
-      marker.on("dragend", function () {
-        const p = marker.getLatLng();
-        updateAsset(asset.id, {
-          lat: Number(p.lat.toFixed(6)),
-          lng: Number(p.lng.toFixed(6)),
-        });
-      });
+  marker.on("dragend", function () {
+    const p = marker.getLatLng();
+    updateAsset(asset.id, {
+      lat: Number(p.lat.toFixed(6)),
+      lng: Number(p.lng.toFixed(6)),
+    });
+  });
 
-      marker.on("click", function () {
-        selectAsset(asset.id);
-      });
+  // Solo mostrar popup si NO es Home Passed
+  if (asset.type !== "homepassed") {
+    marker.on("click", function () {
+      selectAsset(asset.id);
+    });
 
-      // Popup mejorado para activos con foto
-      let popupContent = `
-        <div class="popup-content">
-          <div class="popup-title">${asset.label}</div>
-          <div class="popup-coords">${asset.lat}, ${asset.lng}</div>
-      `;
-      
-      if (asset.props && asset.props.description) {
-        popupContent += `<div>${asset.props.description}</div>`;
-      }
-      
-      if (asset.photo) {
-        popupContent += `
-          <div style="margin-top: 8px;">
-            <img src="${asset.photo}" style="max-width: 150px; max-height: 100px; border-radius: 4px;">
-          </div>
-        `;
-      }
-      
+    let popupContent = `
+      <div class="popup-content">
+        <div class="popup-title">${asset.label}</div>
+        <div class="popup-coords">${asset.lat}, ${asset.lng}</div>
+    `;
+    
+    if (asset.props && asset.props.description) {
+      popupContent += `<div>${asset.props.description}</div>`;
+    }
+    
+    if (asset.photo) {
       popupContent += `
-          <div class="popup-actions">
-            <button class="popup-btn" onclick="selectAsset('${asset.id}')">Editar</button>
-            <button class="popup-btn" onclick="openPhotoModal('${asset.id}')">${asset.photo ? 'Cambiar Foto' : 'Agregar Foto'}</button>
-            <button class="popup-btn" onclick="deleteAsset('${asset.id}')">Eliminar</button>
-          </div>
+        <div style="margin-top: 8px;">
+          <img src="${asset.photo}" style="max-width: 150px; max-height: 100px; border-radius: 4px;">
         </div>
       `;
-
-      marker.bindPopup(popupContent, { maxWidth: 300 });
-
-      markers[asset.id] = marker;
-      
-      // Aplicar visibilidad
-      if (!assetVisibility[asset.type]) {
-        map.removeLayer(marker);
-      }
     }
+    
+    popupContent += `
+        <div class="popup-actions">
+          <button class="popup-btn" onclick="selectAsset('${asset.id}')">Editar</button>
+          <button class="popup-btn" onclick="openPhotoModal('${asset.id}')">${asset.photo ? 'Cambiar Foto' : 'Agregar Foto'}</button>
+          <button class="popup-btn" onclick="deleteAsset('${asset.id}')">Eliminar</button>
+        </div>
+      </div>
+    `;
+
+    marker.bindPopup(popupContent, { maxWidth: 300 });
+  }
+
+  markers[asset.id] = marker;
+
+  // Aplicar visibilidad
+  if (!assetVisibility[asset.type]) {
+    map.removeLayer(marker);
+  }
+}
+
 
     function selectAsset(id) {
       selectedAssetId = id;
@@ -4463,6 +4474,10 @@ pzo: L.icon({
   </script>
 </body>
 </html>
+
+
+
+
 
 
 
