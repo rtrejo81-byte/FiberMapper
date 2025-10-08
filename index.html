@@ -1006,6 +1006,33 @@
       cursor: pointer;
     }
 
+    /* Nuevos estilos para entrada de distancia */
+    .distance-input-container {
+      background-color: var(--surface-light);
+      padding: 12px;
+      border-radius: 10px;
+      margin-top: 12px;
+      display: none;
+    }
+
+    .distance-input-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .distance-input-btn {
+      grid-column: 1 / span 2;
+      background-color: var(--accent);
+      color: white;
+      border: none;
+      padding: 8px;
+      border-radius: 8px;
+      cursor: pointer;
+      text-align: center;
+    }
+
     /* Responsive */
     @media (max-width: 992px) {
       .main-content {
@@ -1230,7 +1257,19 @@
           </div>
 
           <div class="drawing-status" id="drawing-status">
-            <i class="fas fa-drawing-pin"></i> Dibujando cable - Haz clic para agregar puntos
+            <i class="fas fa-drawing-pin"></i> Dibujando cable - Haz clic para agregar puntos. Doble clic o botón "Finalizar" para terminar
+          </div>
+
+          <!-- Entrada de distancia (nueva funcionalidad) -->
+          <div class="distance-input-container" id="distance-input-container">
+            <div style="font-weight:700;margin-bottom:8px;">Ingresar distancia exacta</div>
+            <div class="distance-input-grid">
+              <label>Distancia (metros):</label>
+              <input type="number" step="0.01" min="0" id="exact-distance" placeholder="Ej: 15.5" />
+              <button class="distance-input-btn" id="add-point-by-distance">
+                <i class="fas fa-ruler"></i> Agregar punto a distancia
+              </button>
+            </div>
           </div>
 
           <div class="cable-totals" id="cable-totals">
@@ -1382,9 +1421,8 @@
         </button>
 
         <div class="hint">
-          <i class="fas fa-lightbulb"></i> Consejo: Haz clic en el mapa para agregar un activo
-          del tipo seleccionado. Para cables, haz clic en varios puntos para crear una ruta.
-          Para polígonos, haz clic para agregar vértices y doble clic para finalizar.
+          <i class="fas fa-lightbulb"></i> Consejo: Para cables, puedes hacer clic en el mapa o ingresar distancias exactas. 
+          Usa la entrada de distancia para colocar puntos a medidas precisas como en AutoCAD.
         </div>
 
         <div class="copyright">
@@ -1517,6 +1555,11 @@
     let drawingCable = false;
     let tempMarkers = [];
     let tempPolylines = [];
+
+    // Nuevas variables para el cable (comportamiento AutoCAD)
+    let currentCableLine = null; // Línea temporal del segmento actual
+    let lastCablePoint = null;   // Último punto fijo del cable
+    let currentDirection = 0;    // Dirección actual en grados (para entrada por distancia)
 
     // Nuevas variables para polígonos
     let polygonPoints = [];
@@ -2462,208 +2505,374 @@ pzo: L.icon({
     }
 
     // =========================
-    // Cables - Funciones mejoradas
+    // Cables - Funciones mejoradas (comportamiento AutoCAD)
     // =========================
     function startCableDrawing() {
-      drawingCable = true;
-      cablePoints = [];
-      
-      // Mostrar controles de cable
-      document.getElementById("cable-controls").style.display = "grid";
-      document.getElementById("drawing-status").style.display = "block";
-      document.getElementById("undo-cable-point").disabled = true;
-      document.getElementById("finish-cable-drawing").disabled = true;
-      
-      // Actualizar puntero estático
-      updateStaticCrosshair();
+        drawingCable = true;
+        cablePoints = [];
+        lastCablePoint = null;
+        currentDirection = 0; // Resetear dirección
+        
+        // Mostrar controles de cable
+        document.getElementById("cable-controls").style.display = "grid";
+        document.getElementById("drawing-status").style.display = "block";
+        document.getElementById("distance-input-container").style.display = "block";
+        document.getElementById("undo-cable-point").disabled = true;
+        document.getElementById("finish-cable-drawing").disabled = true;
+        
+        // Agregar evento para movimiento del mouse
+        map.on('mousemove', updateCablePreview);
+        
+        // Actualizar puntero estático
+        updateStaticCrosshair();
+        
+        console.log("Iniciando dibujo de cable - Haz clic para agregar puntos");
+    }
+
+    function updateCablePreview(e) {
+        if (!drawingCable || cablePoints.length === 0) return;
+        
+        // Eliminar línea temporal anterior
+        if (currentCableLine) {
+            map.removeLayer(currentCableLine);
+        }
+        
+        // Crear línea temporal desde el último punto hasta la posición actual del mouse
+        const lastPoint = cablePoints[cablePoints.length - 1];
+        currentCableLine = L.polyline([lastPoint, e.latlng], {
+            color: currentCableType === "fo" ? "#3b82f6" : "#f59e0b",
+            weight: 2,
+            dashArray: '5, 5',
+            opacity: 0.7
+        }).addTo(map);
+        
+        // Calcular y mostrar distancia del segmento actual
+        const segmentDistance = calculateDistance(
+            lastPoint.lat, lastPoint.lng,
+            e.latlng.lat, e.latlng.lng
+        );
+        
+        // Calcular dirección actual
+        currentDirection = calculateDirection(lastPoint, e.latlng);
+        
+        // Calcular distancia total acumulada + segmento actual
+        const totalSoFar = calculateTotalDistance(cablePoints);
+        const totalWithCurrent = totalSoFar + segmentDistance;
+        
+        // Actualizar display con información en tiempo real
+        document.getElementById("segment-distance").textContent = 
+            "Segmento actual: " + segmentDistance.toFixed(2) + " metros - Dirección: " + currentDirection.toFixed(1) + "°";
+        document.getElementById("cable-distance").textContent = 
+            "Distancia total: " + totalSoFar.toFixed(2) + " + " + segmentDistance.toFixed(2) + " = " + totalWithCurrent.toFixed(2) + " metros";
     }
 
     function addCablePoint(latlng) {
-      if (!drawingCable) return;
-      
-      cablePoints.push(latlng);
-
-      // Punto temporal
-      const m = L.circleMarker(latlng, {
-        radius: 5,
-        color: currentCableType === "fo" ? "#3b82f6" : "#f59e0b",
-        fillColor: currentCableType === "fo" ? "#3b82f6" : "#f59e0b",
-        fillOpacity: 0.8,
-      }).addTo(map);
-      tempMarkers.push(m);
-
-      // línea temporal
-      if (cablePoints.length > 1) {
-        const dashArray = currentCableInstallation === "aerial" ? "10, 10" : null;
+        if (!drawingCable) return;
         
-        const pl = L.polyline(cablePoints, {
-          color: currentCableType === "fo" ? "#3b82f6" : "#f59e0b",
-          weight: 3,
-          dashArray: dashArray,
+        // Eliminar línea temporal
+        if (currentCableLine) {
+            map.removeLayer(currentCableLine);
+            currentCableLine = null;
+        }
+        
+        cablePoints.push(latlng);
+        lastCablePoint = latlng;
+
+        // Punto temporal
+        const m = L.circleMarker(latlng, {
+            radius: 5,
+            color: currentCableType === "fo" ? "#3b82f6" : "#f59e0b",
+            fillColor: currentCableType === "fo" ? "#3b82f6" : "#f59e0b",
+            fillOpacity: 0.8,
         }).addTo(map);
-        tempPolylines.push(pl);
+        tempMarkers.push(m);
 
-        // totales
-        const total = calculateTotalDistance(cablePoints);
-        updateDistanceDisplay(total);
+        // línea temporal entre puntos fijos
+        if (cablePoints.length > 1) {
+            const dashArray = currentCableInstallation === "aerial" ? "10, 10" : null;
+            
+            const pl = L.polyline([cablePoints[cablePoints.length - 2], cablePoints[cablePoints.length - 1]], {
+                color: currentCableType === "fo" ? "#3b82f6" : "#f59e0b",
+                weight: 3,
+                dashArray: dashArray,
+            }).addTo(map);
+            tempPolylines.push(pl);
 
-        // último segmento
-        const last = calculateDistance(
-          cablePoints[cablePoints.length - 2].lat,
-          cablePoints[cablePoints.length - 2].lng,
-          cablePoints[cablePoints.length - 1].lat,
-          cablePoints[cablePoints.length - 1].lng
-        );
-        document.getElementById("segment-distance").textContent = "Último segmento: " + last.toFixed(2) + " metros";
+            // Calcular distancia del último segmento
+            const lastSegmentDistance = calculateDistance(
+                cablePoints[cablePoints.length - 2].lat,
+                cablePoints[cablePoints.length - 2].lng,
+                cablePoints[cablePoints.length - 1].lat,
+                cablePoints[cablePoints.length - 1].lng
+            );
+            
+            // Calcular dirección del último segmento
+            const lastDirection = calculateDirection(cablePoints[cablePoints.length - 2], cablePoints[cablePoints.length - 1]);
+            currentDirection = lastDirection;
+            
+            // Calcular distancia total
+            const totalDistance = calculateTotalDistance(cablePoints);
+            
+            // Actualizar displays
+            document.getElementById("segment-distance").textContent = 
+                "Último segmento: " + lastSegmentDistance.toFixed(2) + " metros - Dirección: " + lastDirection.toFixed(1) + "°";
+            document.getElementById("cable-distance").textContent = 
+                "Distancia acumulada: " + totalDistance.toFixed(2) + " metros";
 
-        addDistanceLabel(
-          cablePoints[cablePoints.length - 2],
-          cablePoints[cablePoints.length - 1],
-          last
-        );
-      }
-      
-      // Habilitar botones según cantidad de puntos
-      document.getElementById("undo-cable-point").disabled = cablePoints.length === 0;
-      document.getElementById("finish-cable-drawing").disabled = cablePoints.length < 2;
+            // Agregar etiqueta de distancia
+            addDistanceLabel(
+                cablePoints[cablePoints.length - 2],
+                cablePoints[cablePoints.length - 1],
+                lastSegmentDistance
+            );
+        } else {
+            // Primer punto
+            document.getElementById("cable-distance").textContent = 
+                "Distancia acumulada: 0.00 metros - Haz clic para agregar más puntos";
+        }
+        
+        // Habilitar botones según cantidad de puntos
+        document.getElementById("undo-cable-point").disabled = cablePoints.length === 0;
+        document.getElementById("finish-cable-drawing").disabled = cablePoints.length < 2;
+        
+        console.log("Punto agregado. Total de puntos:", cablePoints.length);
+    }
+
+    // =========================
+    // Nueva función: Agregar punto por distancia
+    // =========================
+    function addPointByDistance() {
+        if (!drawingCable || cablePoints.length === 0) {
+            alert("Primero inicia el dibujo de cable y agrega al menos un punto");
+            return;
+        }
+        
+        const distanceInput = document.getElementById("exact-distance");
+        const distance = parseFloat(distanceInput.value);
+        
+        if (isNaN(distance) || distance <= 0) {
+            alert("Por favor ingresa una distancia válida mayor a 0");
+            return;
+        }
+        
+        const lastPoint = cablePoints[cablePoints.length - 1];
+        
+        // Calcular nueva posición basada en distancia y dirección
+        const newPoint = calculatePointFromDistance(lastPoint, distance, currentDirection);
+        
+        // Agregar el nuevo punto
+        addCablePoint(newPoint);
+        
+        // Limpiar el campo de entrada
+        distanceInput.value = "";
+        
+        console.log("Punto agregado por distancia:", distance, "metros en dirección", currentDirection.toFixed(1) + "°");
+    }
+
+    function calculateDirection(pointA, pointB) {
+        // Calcular dirección en grados (0 = Norte, 90 = Este, 180 = Sur, 270 = Oeste)
+        const lat1 = pointA.lat * Math.PI / 180;
+        const lat2 = pointB.lat * Math.PI / 180;
+        const lng1 = pointA.lng * Math.PI / 180;
+        const lng2 = pointB.lng * Math.PI / 180;
+        
+        const y = Math.sin(lng2 - lng1) * Math.cos(lat2);
+        const x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(lng2 - lng1);
+        const bearing = Math.atan2(y, x) * 180 / Math.PI;
+        
+        return (bearing + 360) % 360; // Normalizar a 0-360
+    }
+
+    function calculatePointFromDistance(startPoint, distance, direction) {
+        // Calcular nuevo punto basado en distancia y dirección
+        const R = 6371000; // Radio de la Tierra en metros
+        const bearing = direction * Math.PI / 180; // Convertir a radianes
+        
+        const lat1 = startPoint.lat * Math.PI / 180;
+        const lng1 = startPoint.lng * Math.PI / 180;
+        
+        const lat2 = Math.asin(Math.sin(lat1) * Math.cos(distance/R) + 
+                              Math.cos(lat1) * Math.sin(distance/R) * Math.cos(bearing));
+        
+        const lng2 = lng1 + Math.atan2(Math.sin(bearing) * Math.sin(distance/R) * Math.cos(lat1),
+                                      Math.cos(distance/R) - Math.sin(lat1) * Math.sin(lat2));
+        
+        return {
+            lat: (lat2 * 180 / Math.PI),
+            lng: (lng2 * 180 / Math.PI)
+        };
     }
 
     function undoLastCablePoint() {
-      if (cablePoints.length === 0) return;
-      
-      // Eliminar último punto y elementos temporales asociados
-      cablePoints.pop();
-      
-      // Eliminar marcador temporal
-      if (tempMarkers.length > 0) {
-        const lastMarker = tempMarkers.pop();
-        map.removeLayer(lastMarker);
-      }
-      
-      // Eliminar polyline temporal
-      if (tempPolylines.length > 0) {
-        const lastPolyline = tempPolylines.pop();
-        map.removeLayer(lastPolyline);
-      }
-      
-      // Eliminar etiqueta de distancia del último segmento
-      if (distanceLabels.length > 0) {
-        const lastLabel = distanceLabels.pop();
-        map.removeLayer(lastLabel);
-      }
-      
-      // Redibujar polyline si aún quedan puntos
-      if (cablePoints.length > 1) {
-        const dashArray = currentCableInstallation === "aerial" ? "10, 10" : null;
+        if (cablePoints.length === 0) return;
         
-        const pl = L.polyline(cablePoints, {
-          color: currentCableType === "fo" ? "#3b82f6" : "#f59e0b",
-          weight: 3,
-          dashArray: dashArray,
-        }).addTo(map);
-        tempPolylines.push(pl);
-        
-        // Recalcular distancia total
-        const total = calculateTotalDistance(cablePoints);
-        updateDistanceDisplay(total);
-        
-        // Actualizar último segmento
-        if (cablePoints.length > 1) {
-          const last = calculateDistance(
-            cablePoints[cablePoints.length - 2].lat,
-            cablePoints[cablePoints.length - 2].lng,
-            cablePoints[cablePoints.length - 1].lat,
-            cablePoints[cablePoints.length - 1].lng
-          );
-          document.getElementById("segment-distance").textContent = "Último segmento: " + last.toFixed(2) + " metros";
-        } else {
-          document.getElementById("segment-distance").textContent = "Último segmento: 0.00 metros";
+        // Eliminar línea temporal si existe
+        if (currentCableLine) {
+            map.removeLayer(currentCableLine);
+            currentCableLine = null;
         }
-      } else {
-        // Si solo queda un punto o ninguno
-        updateDistanceDisplay(0);
-        document.getElementById("segment-distance").textContent = "Último segmento: 0.00 metros";
-      }
-      
-      // Actualizar estado de los botones
-      document.getElementById("undo-cable-point").disabled = cablePoints.length === 0;
-      document.getElementById("finish-cable-drawing").disabled = cablePoints.length < 2;
+        
+        // Eliminar último punto y elementos temporales asociados
+        cablePoints.pop();
+        
+        // Eliminar marcador temporal
+        if (tempMarkers.length > 0) {
+            const lastMarker = tempMarkers.pop();
+            map.removeLayer(lastMarker);
+        }
+        
+        // Eliminar polyline temporal
+        if (tempPolylines.length > 0) {
+            const lastPolyline = tempPolylines.pop();
+            map.removeLayer(lastPolyline);
+        }
+        
+        // Eliminar etiqueta de distancia del último segmento
+        if (distanceLabels.length > 0) {
+            const lastLabel = distanceLabels.pop();
+            map.removeLayer(lastLabel);
+        }
+        
+        // Actualizar último punto
+        lastCablePoint = cablePoints.length > 0 ? cablePoints[cablePoints.length - 1] : null;
+        
+        // Actualizar distancia
+        if (cablePoints.length > 1) {
+            const totalDistance = calculateTotalDistance(cablePoints);
+            const lastSegmentDistance = calculateDistance(
+                cablePoints[cablePoints.length - 2].lat,
+                cablePoints[cablePoints.length - 2].lng,
+                cablePoints[cablePoints.length - 1].lat,
+                cablePoints[cablePoints.length - 1].lng
+            );
+            
+            // Calcular dirección del último segmento
+            const lastDirection = cablePoints.length > 1 ? 
+                calculateDirection(cablePoints[cablePoints.length - 2], cablePoints[cablePoints.length - 1]) : 0;
+            currentDirection = lastDirection;
+            
+            document.getElementById("segment-distance").textContent = 
+                "Último segmento: " + lastSegmentDistance.toFixed(2) + " metros - Dirección: " + lastDirection.toFixed(1) + "°";
+            document.getElementById("cable-distance").textContent = 
+                "Distancia acumulada: " + totalDistance.toFixed(2) + " metros";
+        } else if (cablePoints.length === 1) {
+            document.getElementById("segment-distance").textContent = "Último segmento: 0.00 metros";
+            document.getElementById("cable-distance").textContent = 
+                "Distancia acumulada: 0.00 metros - Haz clic para agregar más puntos";
+            currentDirection = 0;
+        } else {
+            document.getElementById("segment-distance").textContent = "Último segmento: 0.00 metros";
+            document.getElementById("cable-distance").textContent = "Distancia acumulada: 0.00 metros";
+            currentDirection = 0;
+        }
+        
+        // Actualizar estado de los botones
+        document.getElementById("undo-cable-point").disabled = cablePoints.length === 0;
+        document.getElementById("finish-cable-drawing").disabled = cablePoints.length < 2;
+        
+        console.log("Punto deshecho. Total de puntos:", cablePoints.length);
     }
 
     function cancelCableDrawing() {
-      if (!drawingCable) return;
-      
-      // Limpiar todos los elementos temporales
-      tempMarkers.forEach(function(m) { map.removeLayer(m); });
-      tempPolylines.forEach(function(l) { map.removeLayer(l); });
-      tempMarkers = [];
-      tempPolylines = [];
-      cablePoints = [];
-      drawingCable = false;
-      
-      // Limpiar etiquetas de distancia temporales
-      distanceLabels.forEach(function(label) { map.removeLayer(label); });
-      distanceLabels = [];
-      
-      // Ocultar controles de cable
-      document.getElementById("cable-controls").style.display = "none";
-      document.getElementById("drawing-status").style.display = "none";
-      
-      // Restablecer displays de distancia
-      updateDistanceDisplay(0);
-      document.getElementById("segment-distance").textContent = "Último segmento: 0.00 metros";
-      
-      // Actualizar puntero estático
-      updateStaticCrosshair();
+        if (!drawingCable) return;
+        
+        // Remover evento de movimiento del mouse
+        map.off('mousemove', updateCablePreview);
+        
+        // Limpiar todos los elementos temporales
+        tempMarkers.forEach(function(m) { map.removeLayer(m); });
+        tempPolylines.forEach(function(l) { map.removeLayer(l); });
+        if (currentCableLine) {
+            map.removeLayer(currentCableLine);
+            currentCableLine = null;
+        }
+        tempMarkers = [];
+        tempPolylines = [];
+        cablePoints = [];
+        lastCablePoint = null;
+        drawingCable = false;
+        currentDirection = 0;
+        
+        // Limpiar etiquetas de distancia temporales
+        distanceLabels.forEach(function(label) { map.removeLayer(label); });
+        distanceLabels = [];
+        
+        // Ocultar controles de cable
+        document.getElementById("cable-controls").style.display = "none";
+        document.getElementById("drawing-status").style.display = "none";
+        document.getElementById("distance-input-container").style.display = "none";
+        
+        // Restablecer displays de distancia
+        document.getElementById("cable-distance").textContent = "Distancia: 0.00 metros";
+        document.getElementById("segment-distance").textContent = "Último segmento: 0.00 metros";
+        
+        // Actualizar puntero estático
+        updateStaticCrosshair();
+        
+        console.log("Dibujo de cable cancelado");
     }
 
     function finishCableDrawing() {
-      if (!drawingCable || cablePoints.length < 2) {
-        cancelCableDrawing();
-        return;
-      }
+        if (!drawingCable || cablePoints.length < 2) {
+            cancelCableDrawing();
+            return;
+        }
 
-      const id = generateId();
-      const totalDistance = calculateTotalDistance(cablePoints);
+        // Remover evento de movimiento del mouse
+        map.off('mousemove', updateCablePreview);
+        
+        // Eliminar línea temporal
+        if (currentCableLine) {
+            map.removeLayer(currentCableLine);
+            currentCableLine = null;
+        }
 
-      const asset = {
-        id: id,
-        type: "cab",
-        cableType: currentCableType,
-        installationType: currentCableInstallation,
-        label: "CAB_" + id.substring(0, 4),
-        points: cablePoints.map(function(p) { return [Number(p.lat.toFixed(6)), Number(p.lng.toFixed(6))]; }),
-        distance: totalDistance,
-        props: {},
-      };
+        const id = generateId();
+        const totalDistance = calculateTotalDistance(cablePoints);
 
-      assets.push(asset);
+        const asset = {
+            id: id,
+            type: "cab",
+            cableType: currentCableType,
+            installationType: currentCableInstallation,
+            label: "CAB_" + id.substring(0, 4),
+            points: cablePoints.map(function(p) { return [Number(p.lat.toFixed(6)), Number(p.lng.toFixed(6))]; }),
+            distance: totalDistance,
+            props: {},
+        };
 
-      // limpiar temporales
-      tempMarkers.forEach(function(m) { map.removeLayer(m); });
-      tempPolylines.forEach(function(l) { map.removeLayer(l); });
-      tempMarkers = [];
-      tempPolylines = [];
-      cablePoints = [];
-      drawingCable = false;
+        assets.push(asset);
 
-      // Ocultar controles de cable
-      document.getElementById("cable-controls").style.display = "none";
-      document.getElementById("drawing-status").style.display = "none";
+        // limpiar temporales
+        tempMarkers.forEach(function(m) { map.removeLayer(m); });
+        tempPolylines.forEach(function(l) { map.removeLayer(l); });
+        tempMarkers = [];
+        tempPolylines = [];
+        cablePoints = [];
+        lastCablePoint = null;
+        drawingCable = false;
+        currentDirection = 0;
 
-      updateDistanceDisplay(0);
-      document.getElementById("segment-distance").textContent = "Último segmento: 0.00 metros";
+        // Ocultar controles de cable
+        document.getElementById("cable-controls").style.display = "none";
+        document.getElementById("drawing-status").style.display = "none";
+        document.getElementById("distance-input-container").style.display = "none";
 
-      addCableToMap(asset);
-      addLabelToAsset(asset);
-      renderAssetsList();
-      updateStats();
-      calculateCableTotals();
-      saveData();
-      selectAsset(id);
-      
-      // Actualizar puntero estático
-      updateStaticCrosshair();
+        document.getElementById("cable-distance").textContent = "Distancia: 0.00 metros";
+        document.getElementById("segment-distance").textContent = "Último segmento: 0.00 metros";
+
+        addCableToMap(asset);
+        addLabelToAsset(asset);
+        renderAssetsList();
+        updateStats();
+        calculateCableTotals();
+        saveData();
+        selectAsset(id);
+        
+        // Actualizar puntero estático
+        updateStaticCrosshair();
+        
+        console.log("Cable finalizado. Distancia total:", totalDistance.toFixed(2), "metros");
     }
 
     function addCableToMap(asset) {
@@ -2680,7 +2889,7 @@ pzo: L.icon({
       poly.on("click", function() { selectAsset(asset.id); });
 
       const distance = asset.distance || 0;
-      const installationType = asset.installationType === "aerial" ? "Aéreo" : "Ducto";
+      const installationType = asset.installationType === "aerial" ? "Aéreo" : (asset.installationType === "duct" ? "Ducto" : "N/A");
       
       poly.bindPopup(`
         <div class="popup-content">
@@ -4071,6 +4280,7 @@ pzo: L.icon({
       polygonPoints = [];
       drawingCable = false;
       drawingPolygon = false;
+      currentDirection = 0;
       
       // Limpiar ubicación actual
       clearCurrentLocation();
@@ -4368,6 +4578,16 @@ pzo: L.icon({
       document.getElementById("cancel-cable-drawing").addEventListener("click", cancelCableDrawing);
       document.getElementById("finish-cable-drawing").addEventListener("click", finishCableDrawing);
 
+      // Nueva funcionalidad: Agregar punto por distancia
+      document.getElementById("add-point-by-distance").addEventListener("click", addPointByDistance);
+
+      // Permitir Enter en el campo de distancia
+      document.getElementById("exact-distance").addEventListener("keypress", function(e) {
+        if (e.key === "Enter") {
+          addPointByDistance();
+        }
+      });
+
       // Controles de polígono
       document.getElementById("undo-polygon-point").addEventListener("click", undoLastPolygonPoint);
       document.getElementById("cancel-polygon-drawing").addEventListener("click", cancelPolygonDrawing);
@@ -4474,14 +4694,3 @@ pzo: L.icon({
   </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
