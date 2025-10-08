@@ -1647,22 +1647,8 @@
     let eraseStartPoint = null;
     let isDrawingEraseRect = false;
 
-    // Controles de visibilidad
-    let assetVisibility = {
-      poste: true,
-      nap: true,
-      cab: true,
-      fat: true,
-      olt: true,
-      fdh: true,
-      emp: true,
-      pzo: true,
-      ont: true,
-      odf: true,
-      box: true,
-      polygon: true,
-      homepassed: true,
-    };
+    // MODIFICACIÓN: Controles de visibilidad - ahora se inicializa vacío y se llena dinámicamente
+    let assetVisibility = {};
 
     // Contadores para numeración automática
     const assetCounters = {
@@ -2028,8 +2014,11 @@ pzo: L.icon({
       
       if (savedVisibility) {
         assetVisibility = JSON.parse(savedVisibility);
-        updateVisibilityControls();
-        applyVisibility();
+        // MODIFICACIÓN: Actualizar visibilidad después de cargar
+        updateAssetVisibility();
+      } else {
+        // MODIFICACIÓN: Inicializar visibilidad si no hay datos guardados
+        updateAssetVisibility();
       }
     }
 
@@ -2083,6 +2072,9 @@ pzo: L.icon({
   updateStats();
   saveData();
   selectAsset(id);
+  
+  // MODIFICACIÓN: Actualizar visibilidad después de agregar un activo
+  updateAssetVisibility();
   
   return asset;
 }
@@ -2259,6 +2251,9 @@ pzo: L.icon({
       selectedAssetId = null;
       document.getElementById("editor-panel").style.display = "none";
       document.getElementById("no-selection-message").style.display = "block";
+      
+      // MODIFICACIÓN: Actualizar visibilidad después de eliminar un activo
+      updateAssetVisibility();
     }
 
     function renderAssetsList() {
@@ -2932,6 +2927,9 @@ pzo: L.icon({
         // Actualizar puntero estático
         updateStaticCrosshair();
         
+        // MODIFICACIÓN: Actualizar visibilidad después de finalizar un cable
+        updateAssetVisibility();
+        
         console.log("Cable finalizado. Distancia total:", totalDistance.toFixed(2), "metros");
     }
 
@@ -3201,6 +3199,9 @@ pzo: L.icon({
       
       // Actualizar puntero estático
       updateStaticCrosshair();
+      
+      // MODIFICACIÓN: Actualizar visibilidad después de finalizar un polígono
+      updateAssetVisibility();
     }
 
     function addPolygonToMap(asset) {
@@ -3686,8 +3687,8 @@ pzo: L.icon({
     function cancelEraseMode() {
       erasingMode = false;
       document.getElementById("erase-status").style.display = "none";
-      document.getElementById("start-erase-btn").style.display = "block";
-      document.getElementById("cancel-erase-btn").style.display = "none";
+      document.getElementById("start-erase-btn").style.display = "none";
+      document.getElementById("cancel-erase-btn").style.display = "block";
       
       // Restaurar cursor normal
       map.getContainer().style.cursor = "";
@@ -3837,19 +3838,58 @@ pzo: L.icon({
     }
 
     // =========================
-    // Control de visibilidad
+    // Control de visibilidad - FUNCIONES MODIFICADAS
     // =========================
+    
+    // NUEVA FUNCIÓN: Actualizar dinámicamente los tipos de activos disponibles
+    function updateAssetVisibility() {
+      // Obtener todos los tipos de activos presentes
+      const presentAssetTypes = new Set();
+      
+      assets.forEach(function(asset) {
+        presentAssetTypes.add(asset.type);
+      });
+      
+      // Inicializar visibilidad para tipos presentes
+      presentAssetTypes.forEach(function(type) {
+        if (assetVisibility[type] === undefined) {
+          assetVisibility[type] = true; // Por defecto visible
+        }
+      });
+      
+      // Eliminar tipos que ya no están presentes
+      Object.keys(assetVisibility).forEach(function(type) {
+        if (!presentAssetTypes.has(type)) {
+          delete assetVisibility[type];
+        }
+      });
+      
+      // Actualizar controles de visibilidad
+      updateVisibilityControls();
+      applyVisibility();
+      saveData();
+    }
+
     function updateVisibilityControls() {
       const container = document.getElementById("visibility-controls");
       container.innerHTML = "";
       
-      Object.keys(assetVisibility).forEach(function(type) {
+      // Ordenar los tipos alfabéticamente para mejor presentación
+      const sortedTypes = Object.keys(assetVisibility).sort();
+      
+      sortedTypes.forEach(function(type) {
         const item = document.createElement("div");
         item.className = "visibility-item";
         
         const label = document.createElement("span");
         label.className = "visibility-label";
-        label.textContent = type.toUpperCase();
+        
+        // Contar cuántos activos de este tipo existen
+        const count = assets.filter(function(asset) { 
+          return asset.type === type; 
+        }).length;
+        
+        label.textContent = `${type.toUpperCase()} (${count})`;
         
         const switchContainer = document.createElement("label");
         switchContainer.className = "switch";
@@ -3873,6 +3913,15 @@ pzo: L.icon({
         item.appendChild(switchContainer);
         container.appendChild(item);
       });
+      
+      // Mostrar mensaje si no hay activos
+      if (sortedTypes.length === 0) {
+        const message = document.createElement("div");
+        message.className = "hint";
+        message.style.textAlign = "center";
+        message.textContent = "Agrega activos para ver los controles de visibilidad";
+        container.appendChild(message);
+      }
     }
 
     function applyVisibility() {
@@ -3999,7 +4048,7 @@ pzo: L.icon({
 
     function exportToKML(forWhatsApp = false) {
       let kmlContent = `<?xml version="1.0" encoding="UTF-8"?>
-<kml xmlns="http://www.opengis.net/kml/2.2">
+<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2">
   <Document>
     <name>Fiber Mapper Export</name>
     <description>Exportado desde Fiber Mapper</description>`;
@@ -4393,6 +4442,10 @@ pzo: L.icon({
           updateStats();
           calculateCableTotals();
           saveData();
+          
+          // MODIFICACIÓN: Actualizar visibilidad después de importar
+          updateAssetVisibility();
+          
           alert("Se importaron " + importedCount + " elementos correctamente.");
         } else {
           alert("No se encontraron elementos válidos para importar en el archivo KML.");
@@ -4454,6 +4507,9 @@ pzo: L.icon({
         }
         
         if (importedCount > 0) {
+          // MODIFICACIÓN: Actualizar visibilidad después de importar
+          updateAssetVisibility();
+          
           alert("Se importaron " + importedCount + " elementos correctamente.");
         } else {
           alert("No se encontraron elementos válidos para importar en el archivo CSV.");
@@ -4549,6 +4605,9 @@ pzo: L.icon({
       if (erasingMode) {
         cancelEraseMode();
       }
+      
+      // MODIFICACIÓN: Actualizar visibilidad después de limpiar
+      updateAssetVisibility();
     }
 
     function getCurrentLocation(highAccuracy) {
@@ -4933,11 +4992,12 @@ pzo: L.icon({
       // Inicializar puntero estático
       updateStaticCrosshair();
       
-      // Inicializar controles de visibilidad
-      updateVisibilityControls();
+      // MODIFICACIÓN: Inicializar controles de visibilidad dinámicamente
+      updateAssetVisibility();
       
       console.log("Aplicación inicializada correctamente");
     });
   </script>
 </body>
 </html>
+
