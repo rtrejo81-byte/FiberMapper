@@ -1033,6 +1033,26 @@
       text-align: center;
     }
 
+    /* Nuevos estilos para la herramienta de borrado */
+    .erase-rectangle {
+      position: absolute;
+      border: 2px dashed #ef4444;
+      background-color: rgba(239, 68, 68, 0.1);
+      pointer-events: none;
+      z-index: 1000;
+    }
+
+    .erase-status {
+      background-color: var(--error);
+      color: white;
+      padding: 8px;
+      border-radius: 8px;
+      text-align: center;
+      margin-top: 10px;
+      font-size: 13px;
+      display: none;
+    }
+
     /* Responsive */
     @media (max-width: 992px) {
       .main-content {
@@ -1144,6 +1164,10 @@
           <input type="file" id="import-data" accept=".csv,.kml" />
         </label>
 
+        <button id="erase-btn" title="Herramienta de borrado">
+          <i class="fas fa-eraser"></i> Borrar
+        </button>
+
         <button id="clear-screen" title="Limpiar todo">
           <i class="fas fa-trash"></i> Limpiar
         </button>
@@ -1224,6 +1248,25 @@
         <div class="sidebar-section">
           <div class="sidebar-title">Activos</div>
           <div id="assets-list" class="assets-list"></div>
+        </div>
+
+        <!-- Herramienta de borrado -->
+        <div class="sidebar-section">
+          <div class="sidebar-title">Herramienta de Borrado</div>
+          <div class="erase-status" id="erase-status">
+            <i class="fas fa-eraser"></i> Modo borrado activo - Haz clic en elementos o dibuja un rectángulo para borrar
+          </div>
+          <button class="map-control-btn" id="start-erase-btn" style="width: 100%; margin-top: 10px;">
+            <i class="fas fa-eraser"></i> Activar Borrado
+          </button>
+          <button class="map-control-btn" id="cancel-erase-btn" style="width: 100%; margin-top: 5px; display: none;">
+            <i class="fas fa-times"></i> Cancelar Borrado
+          </button>
+          <div class="hint" style="margin-top: 10px;">
+            <i class="fas fa-lightbulb"></i> Consejo: Activa el borrado y luego:<br>
+            • Haz clic en cualquier elemento para eliminarlo<br>
+            • Arrastra para dibujar un rectángulo y borrar múltiples elementos
+          </div>
         </div>
 
         <!-- Cable -->
@@ -1598,6 +1641,12 @@
     let midpointMarkers = [];
     let originalPolygonPoints = [];
 
+    // Variables para la herramienta de borrado
+    let erasingMode = false;
+    let eraseRectangle = null;
+    let eraseStartPoint = null;
+    let isDrawingEraseRect = false;
+
     // Controles de visibilidad
     let assetVisibility = {
       poste: true,
@@ -1766,6 +1815,12 @@ pzo: L.icon({
 
       // Click en mapa para agregar activo o dibujar cable
       map.on("click", function(e) {
+        if (erasingMode) {
+          // En modo borrado, buscar elementos en la posición del click
+          findAndDeleteAssetsAtPoint(e.latlng);
+          return;
+        }
+        
         const type = document.getElementById("asset-type-selector").value;
         console.log("Click en mapa, tipo seleccionado:", type);
         if (type === "cab") {
@@ -1794,6 +1849,11 @@ pzo: L.icon({
           finishPolygonDrawing();
         }
       });
+      
+      // Eventos para el rectángulo de borrado
+      map.on('mousedown', startEraseRectangle);
+      map.on('mousemove', updateEraseRectangle);
+      map.on('mouseup', finishEraseRectangle);
       
       console.log("Mapa inicializado correctamente");
     }
@@ -3608,6 +3668,175 @@ pzo: L.icon({
     }
 
     // =========================
+    // HERRAMIENTA DE BORRADO - NUEVAS FUNCIONES
+    // =========================
+
+    function startEraseMode() {
+      erasingMode = true;
+      document.getElementById("erase-status").style.display = "block";
+      document.getElementById("start-erase-btn").style.display = "none";
+      document.getElementById("cancel-erase-btn").style.display = "block";
+      
+      // Cambiar el cursor para indicar modo borrado
+      map.getContainer().style.cursor = "crosshair";
+      
+      console.log("Modo borrado activado");
+    }
+
+    function cancelEraseMode() {
+      erasingMode = false;
+      document.getElementById("erase-status").style.display = "none";
+      document.getElementById("start-erase-btn").style.display = "block";
+      document.getElementById("cancel-erase-btn").style.display = "none";
+      
+      // Restaurar cursor normal
+      map.getContainer().style.cursor = "";
+      
+      // Limpiar rectángulo de borrado si existe
+      if (eraseRectangle) {
+        map.removeLayer(eraseRectangle);
+        eraseRectangle = null;
+      }
+      
+      console.log("Modo borrado cancelado");
+    }
+
+    function startEraseRectangle(e) {
+      if (!erasingMode || isDrawingEraseRect) return;
+      
+      isDrawingEraseRect = true;
+      eraseStartPoint = e.latlng;
+      
+      // Crear rectángulo temporal
+      eraseRectangle = L.rectangle([eraseStartPoint, eraseStartPoint], {
+        color: '#ef4444',
+        weight: 2,
+        fillColor: '#ef4444',
+        fillOpacity: 0.1,
+        dashArray: '5, 5'
+      }).addTo(map);
+    }
+
+    function updateEraseRectangle(e) {
+      if (!erasingMode || !isDrawingEraseRect || !eraseStartPoint) return;
+      
+      // Actualizar el rectángulo
+      const bounds = L.latLngBounds(eraseStartPoint, e.latlng);
+      eraseRectangle.setBounds(bounds);
+    }
+
+    function finishEraseRectangle(e) {
+      if (!erasingMode || !isDrawingEraseRect || !eraseStartPoint) return;
+      
+      isDrawingEraseRect = false;
+      
+      const bounds = L.latLngBounds(eraseStartPoint, e.latlng);
+      
+      // Buscar y eliminar elementos dentro del rectángulo
+      findAndDeleteAssetsInBounds(bounds);
+      
+      // Eliminar el rectángulo
+      if (eraseRectangle) {
+        map.removeLayer(eraseRectangle);
+        eraseRectangle = null;
+      }
+    }
+
+    function findAndDeleteAssetsAtPoint(latlng) {
+      const point = L.latLng(latlng.lat, latlng.lng);
+      let deletedCount = 0;
+      
+      // Buscar marcadores en el punto
+      assets.forEach(function(asset) {
+        if (asset.type !== "cab" && asset.type !== "polygon") {
+          const markerPoint = L.latLng(asset.lat, asset.lng);
+          if (map.distance(point, markerPoint) < 10) { // Tolerancia de 10 metros
+            deleteAsset(asset.id);
+            deletedCount++;
+          }
+        }
+      });
+      
+      // Buscar cables cerca del punto
+      assets.forEach(function(asset) {
+        if (asset.type === "cab" && asset.points) {
+          for (let i = 0; i < asset.points.length; i++) {
+            const cablePoint = L.latLng(asset.points[i][0], asset.points[i][1]);
+            if (map.distance(point, cablePoint) < 10) { // Tolerancia de 10 metros
+              deleteAsset(asset.id);
+              deletedCount++;
+              break;
+            }
+          }
+        }
+      });
+      
+      // Buscar polígonos que contengan el punto
+      assets.forEach(function(asset) {
+        if (asset.type === "polygon" && asset.points) {
+          if (isPointInPolygon([point.lat, point.lng], asset.points)) {
+            deleteAsset(asset.id);
+            deletedCount++;
+          }
+        }
+      });
+      
+      if (deletedCount > 0) {
+        console.log(`Se eliminaron ${deletedCount} elementos`);
+      } else {
+        console.log("No se encontraron elementos para eliminar en esa posición");
+      }
+    }
+
+    function findAndDeleteAssetsInBounds(bounds) {
+      let deletedCount = 0;
+      const assetsToDelete = [];
+      
+      // Buscar elementos dentro del rectángulo
+      assets.forEach(function(asset) {
+        if (asset.type !== "cab" && asset.type !== "polygon") {
+          // Para marcadores simples
+          const point = L.latLng(asset.lat, asset.lng);
+          if (bounds.contains(point)) {
+            assetsToDelete.push(asset.id);
+            deletedCount++;
+          }
+        } else if (asset.type === "cab" && asset.points) {
+          // Para cables - eliminar si algún punto está dentro del rectángulo
+          for (let i = 0; i < asset.points.length; i++) {
+            const point = L.latLng(asset.points[i][0], asset.points[i][1]);
+            if (bounds.contains(point)) {
+              assetsToDelete.push(asset.id);
+              deletedCount++;
+              break;
+            }
+          }
+        } else if (asset.type === "polygon" && asset.points) {
+          // Para polígonos - eliminar si algún vértice está dentro del rectángulo
+          for (let i = 0; i < asset.points.length; i++) {
+            const point = L.latLng(asset.points[i][0], asset.points[i][1]);
+            if (bounds.contains(point)) {
+              assetsToDelete.push(asset.id);
+              deletedCount++;
+              break;
+            }
+          }
+        }
+      });
+      
+      // Eliminar los elementos encontrados
+      assetsToDelete.forEach(function(id) {
+        deleteAsset(id);
+      });
+      
+      if (deletedCount > 0) {
+        console.log(`Se eliminaron ${deletedCount} elementos dentro del rectángulo`);
+      } else {
+        console.log("No se encontraron elementos para eliminar dentro del rectángulo");
+      }
+    }
+
+    // =========================
     // Control de visibilidad
     // =========================
     function updateVisibilityControls() {
@@ -4315,6 +4544,11 @@ pzo: L.icon({
       document.getElementById("static-crosshair").style.display = "none";
       document.getElementById("add-at-pointer-btn").style.display = "none";
       staticCrosshairVisible = false;
+      
+      // Cancelar modo borrado si está activo
+      if (erasingMode) {
+        cancelEraseMode();
+      }
     }
 
     function getCurrentLocation(highAccuracy) {
@@ -4604,6 +4838,19 @@ pzo: L.icon({
       
       document.getElementById("cancel-polygon-edit").addEventListener("click", cancelPolygonEdit);
       document.getElementById("save-polygon-edit").addEventListener("click", savePolygonEdit);
+
+      // Herramienta de borrado - NUEVOS EVENT LISTENERS
+      document.getElementById("erase-btn").addEventListener("click", function() {
+        startEraseMode();
+      });
+      
+      document.getElementById("start-erase-btn").addEventListener("click", function() {
+        startEraseMode();
+      });
+      
+      document.getElementById("cancel-erase-btn").addEventListener("click", function() {
+        cancelEraseMode();
+      });
 
       // Limpiar pantalla
       document.getElementById("clear-screen").addEventListener("click", clearAllData);
