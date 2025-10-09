@@ -3668,8 +3668,8 @@ pzo: L.icon({
       midpointMarkers = [];
     }
 
-    // =========================
-    // HERRAMIENTA DE BORRADO - NUEVAS FUNCIONES
+     // =========================
+    // HERRAMIENTA DE BORRADO - FUNCIONES MEJORADAS
     // =========================
 
     function startEraseMode() {
@@ -3687,8 +3687,8 @@ pzo: L.icon({
     function cancelEraseMode() {
       erasingMode = false;
       document.getElementById("erase-status").style.display = "none";
-      document.getElementById("start-erase-btn").style.display = "none";
-      document.getElementById("cancel-erase-btn").style.display = "block";
+      document.getElementById("start-erase-btn").style.display = "block";
+      document.getElementById("cancel-erase-btn").style.display = "none";
       
       // Restaurar cursor normal
       map.getContainer().style.cursor = "";
@@ -3699,11 +3699,21 @@ pzo: L.icon({
         eraseRectangle = null;
       }
       
+      // Restaurar el arrastre del mapa si estaba deshabilitado
+      if (map.dragging && !map.dragging.enabled()) {
+        map.dragging.enable();
+      }
+      
       console.log("Modo borrado cancelado");
     }
 
     function startEraseRectangle(e) {
       if (!erasingMode || isDrawingEraseRect) return;
+      
+      // DESHABILITAR EL ARRASTRE DEL MAPA MIENTRAS SE DIBUJA EL RECTÁNGULO
+      if (map.dragging && map.dragging.enabled()) {
+        map.dragging.disable();
+      }
       
       isDrawingEraseRect = true;
       eraseStartPoint = e.latlng;
@@ -3733,13 +3743,18 @@ pzo: L.icon({
       
       const bounds = L.latLngBounds(eraseStartPoint, e.latlng);
       
-      // Buscar y eliminar elementos dentro del rectángulo
-      findAndDeleteAssetsInBounds(bounds);
+      // Buscar y eliminar elementos dentro del rectángulo (SOLO LOS VISIBLES)
+      findAndDeleteVisibleAssetsInBounds(bounds);
       
       // Eliminar el rectángulo
       if (eraseRectangle) {
         map.removeLayer(eraseRectangle);
         eraseRectangle = null;
+      }
+      
+      // RESTAURAR EL ARRASTRE DEL MAPA DESPUÉS DE TERMINAR
+      if (map.dragging && !map.dragging.enabled()) {
+        map.dragging.enable();
       }
     }
 
@@ -3747,9 +3762,12 @@ pzo: L.icon({
       const point = L.latLng(latlng.lat, latlng.lng);
       let deletedCount = 0;
       
-      // Buscar marcadores en el punto
+      // Buscar marcadores en el punto (SOLO LOS VISIBLES)
       assets.forEach(function(asset) {
         if (asset.type !== "cab" && asset.type !== "polygon") {
+          // Verificar si el activo está visible
+          if (!assetVisibility[asset.type]) return;
+          
           const markerPoint = L.latLng(asset.lat, asset.lng);
           if (map.distance(point, markerPoint) < 10) { // Tolerancia de 10 metros
             deleteAsset(asset.id);
@@ -3758,9 +3776,12 @@ pzo: L.icon({
         }
       });
       
-      // Buscar cables cerca del punto
+      // Buscar cables cerca del punto (SOLO LOS VISIBLES)
       assets.forEach(function(asset) {
         if (asset.type === "cab" && asset.points) {
+          // Verificar si el cable está visible
+          if (!assetVisibility[asset.type]) return;
+          
           for (let i = 0; i < asset.points.length; i++) {
             const cablePoint = L.latLng(asset.points[i][0], asset.points[i][1]);
             if (map.distance(point, cablePoint) < 10) { // Tolerancia de 10 metros
@@ -3772,9 +3793,12 @@ pzo: L.icon({
         }
       });
       
-      // Buscar polígonos que contengan el punto
+      // Buscar polígonos que contengan el punto (SOLO LOS VISIBLES)
       assets.forEach(function(asset) {
         if (asset.type === "polygon" && asset.points) {
+          // Verificar si el polígono está visible
+          if (!assetVisibility[asset.type]) return;
+          
           if (isPointInPolygon([point.lat, point.lng], asset.points)) {
             deleteAsset(asset.id);
             deletedCount++;
@@ -3783,18 +3807,22 @@ pzo: L.icon({
       });
       
       if (deletedCount > 0) {
-        console.log(`Se eliminaron ${deletedCount} elementos`);
+        console.log(`Se eliminaron ${deletedCount} elementos visibles`);
       } else {
-        console.log("No se encontraron elementos para eliminar en esa posición");
+        console.log("No se encontraron elementos visibles para eliminar en esa posición");
       }
     }
 
-    function findAndDeleteAssetsInBounds(bounds) {
+    // NUEVA FUNCIÓN: Buscar y eliminar solo activos VISIBLES dentro de los límites
+    function findAndDeleteVisibleAssetsInBounds(bounds) {
       let deletedCount = 0;
       const assetsToDelete = [];
       
-      // Buscar elementos dentro del rectángulo
+      // Buscar elementos dentro del rectángulo (SOLO LOS VISIBLES)
       assets.forEach(function(asset) {
+        // Verificar si el tipo de activo está visible
+        if (!assetVisibility[asset.type]) return;
+        
         if (asset.type !== "cab" && asset.type !== "polygon") {
           // Para marcadores simples
           const point = L.latLng(asset.lat, asset.lng);
@@ -3831,9 +3859,9 @@ pzo: L.icon({
       });
       
       if (deletedCount > 0) {
-        console.log(`Se eliminaron ${deletedCount} elementos dentro del rectángulo`);
+        console.log(`Se eliminaron ${deletedCount} elementos visibles dentro del rectángulo`);
       } else {
-        console.log("No se encontraron elementos para eliminar dentro del rectángulo");
+        console.log("No se encontraron elementos visibles para eliminar dentro del rectángulo");
       }
     }
 
@@ -5000,4 +5028,5 @@ pzo: L.icon({
   </script>
 </body>
 </html>
+
 
